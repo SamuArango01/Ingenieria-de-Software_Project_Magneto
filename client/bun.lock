@@ -27,6 +27,7 @@
         "@types/react-dom": "^19",
         "eslint": "^9",
         "eslint-config-next": "15.4.6",
+        "tailwind-animations": "^0.0.1",
         "tailwindcss": "^4",
         "tw-animate-css": "^1.3.8",
         "typescript": "^5",
@@ -861,6 +862,8 @@
     "supports-preserve-symlinks-flag": ["supports-preserve-symlinks-flag@1.0.0", "", {}, "sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w=="],
 
     "swr": ["swr@2.3.4", "", { "dependencies": { "dequal": "^2.0.3", "use-sync-external-store": "^1.4.0" }, "peerDependencies": { "react": "^16.11.0 || ^17.0.0 || ^18.0.0 || ^19.0.0" } }, "sha512-bYd2lrhc+VarcpkgWclcUi92wYCpOgMws9Sd1hG1ntAu0NEy+14CbotuFjshBU2kt9rYj9TSmDcybpxpeTU1fg=="],
+
+    "tailwind-animations": ["tailwind-animations@0.0.1", "", { "peerDependencies": { "tailwindcss": "^3.0.0" } }, "sha512-iLrKlvTdTy76TC/mi6ms/4TUOQptNH6odYN3X7n0pdzSEo0ISxKmcheu5fVEo8ERB/pzRXnm/Ajx7Bq21ECKiw=="],
 
     "tailwind-merge": ["tailwind-merge@3.3.1", "", {}, "sha512-gBXpgUm/3rp1lMZZrM/w7D8GKqshif0zAymAhbCyIt8KMe+0v9DQ7cdYLR4FHH/cKpdTXb+A/tKKU3eolfsI+g=="],
 
