@@ -48,10 +48,7 @@ export default function App() {
             <a href="#" className="text-sm font-semibold text-white">
               Docs
             </a>
-            <Link
-              href={"/register"}
-              className="text-sm font-semibold text-white"
-            >
+            <Link href={"/auth"} className="text-sm font-semibold text-white">
               Dashboard
             </Link>
           </div>
@@ -114,7 +111,7 @@ export default function App() {
 
             <div className="mt-10 flex items-center justify-center gap-x-6">
               <Link
-                href={"/register"}
+                href={"/auth"}
                 className="rounded-md bg-emerald-500 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500"
               >
                 Registrarse
