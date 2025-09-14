@@ -17,8 +17,26 @@ export function AuthBackground({ children }: { children: React.ReactNode }) {
         </div>
       </div>
 
-      {/* Contenido (children) */}
-      {children}
+      {/* Layout horizontal */}
+      <div className="relative z-10 w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+        {/* Texto izquierdo */}
+        <div className="text-center lg:text-left">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
+            Comienza a
+            <span className="block bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
+              practicar
+            </span>
+            <span className="block">con la AI</span>
+          </h1>
+          <p className="mt-6 text-lg text-gray-400 max-w-lg mx-auto lg:mx-0">
+            Descubre el poder de la inteligencia artificial y lleva tus
+            habilidades al siguiente nivel
+          </p>
+        </div>
+
+        {/* Card a la derecha */}
+        {children}
+      </div>
 
       {/* Efecto de fondo inferior */}
       <div className="absolute inset-0 overflow-hidden">
