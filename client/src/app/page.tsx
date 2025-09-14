@@ -27,35 +27,6 @@ export default function App() {
 
   return (
     <div className="bg-gray-900 min-h-screen">
-      <header className="absolute inset-x-0 top-0 z-50">
-        <nav
-          aria-label="Global"
-          className="flex items-center justify-between p-6 lg:px-8"
-        >
-          <div className="flex lg:flex-1">
-            <a href="#" className="-m-1.5 p-1.5">
-              <span className="sr-only">StarTraining</span>
-              <div className="h-8 w-8 bg-emerald-500 rounded-lg"></div>
-            </a>
-          </div>
-          <div className="hidden lg:flex lg:gap-x-12">
-            <a href="#" className="text-sm font-semibold text-white">
-              API
-            </a>
-            <a href="#" className="text-sm font-semibold text-white">
-              Features
-            </a>
-            <a href="#" className="text-sm font-semibold text-white">
-              Docs
-            </a>
-            <Link href={"/auth"} className="text-sm font-semibold text-white">
-              Dashboard
-            </Link>
-          </div>
-          <div className="hidden lg:flex lg:flex-1 lg:justify-end"></div>
-        </nav>
-      </header>
-
       <div className="relative isolate px-6 pt-14 lg:px-8">
         <div
           aria-hidden="true"
