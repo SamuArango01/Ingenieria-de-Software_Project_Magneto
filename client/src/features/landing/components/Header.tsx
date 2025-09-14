@@ -1,10 +1,13 @@
+/* eslint-disable @next/next/no-img-element */
 /** biome-ignore-all lint/a11y/useValidAnchor: <explanation> */
+/** biome-ignore-all lint/performance/noImgElement: <explanation> */
 "use client";
 
 import { useState } from "react";
 import { Dialog, DialogPanel } from "@headlessui/react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import Image from "next/image";
+import Link from "next/link";
 
 const navigation = [
   { name: "Product", href: "#" },
@@ -70,7 +73,7 @@ export function Header() {
             <div className="flex items-center justify-between">
               <a href="#" className="-m-1.5 p-1.5">
                 <span className="sr-only">Your Company</span>
-                <Image
+                <img
                   alt="Imagen de empresa"
                   src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=500"
                   className="h-8 w-auto"
@@ -144,12 +147,12 @@ export function Header() {
               lorem cupidatat commodo. Elit sunt amet fugiat veniam occaecat.
             </p>
             <div className="mt-10 flex items-center justify-center gap-x-6">
-              <a
-                href="#"
-                className="rounded-md bg-indigo-500 px-3.5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+              <Link
+                href={"/auth"}
+                className="rounded-md bg-emerald-500 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500"
               >
-                Get started
-              </a>
+                Registrarse
+              </Link>
               <a href="#" className="text-sm/6 font-semibold text-white">
                 Learn more <span aria-hidden="true">→</span>
               </a>

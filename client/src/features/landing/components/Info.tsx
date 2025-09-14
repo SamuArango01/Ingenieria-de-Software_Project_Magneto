@@ -1,3 +1,5 @@
+/* eslint-disable @next/next/no-img-element */
+/** biome-ignore-all lint/performance/noImgElement: <explanation> */
 import {
   CloudArrowUpIcon,
   LockClosedIcon,
@@ -60,7 +62,7 @@ export function Info() {
               </dl>
             </div>
           </div>
-          <Image
+          <img
             alt="Product screenshot"
             src="https://tailwindcss.com/plus-assets/img/component-images/dark-project-app-screenshot.png"
             width={2432}
