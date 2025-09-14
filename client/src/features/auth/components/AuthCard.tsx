@@ -76,7 +76,7 @@ export function AuthCard() {
           <p className="text-xs text-gray-500 w-full">
             Al continuar, aceptas nuestros{" "}
             <a
-            // {pendiente el redirect o no agregarlo}
+              // {pendiente el redirect o no agregarlo}
               href="#"
               className="text-emerald-400 hover:text-emerald-300 underline"
             >
@@ -97,7 +97,6 @@ export function AuthCard() {
         <CardContent className="px-6 text-center">
           <div className="flex flex-col items-center space-y-6">
             <UserButton
-              afterSignOutUrl="/"
               appearance={{
                 elements: {
                   avatarBox: "w-16 h-16",
