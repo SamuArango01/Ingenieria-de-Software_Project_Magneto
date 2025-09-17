@@ -34,6 +34,7 @@ yarn-error.log*
 .env*
 
 CLAUDE.md
+GEMINI.md
 .claude/
 
 # vercel

@@ -9,6 +9,8 @@ Para ejecutar el servidor, necesitas configurar las siguientes variables de ento
 - `GOOGLE_API_KEY`: Clave de API de Google
 - `DEEPGRAM_API_KEY`: Clave de API de Deepgram
 
+## Configuracion de client en el README.md de client
+
 ## Instalación
 
 1. Clona el repositorio
