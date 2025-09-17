@@ -8,11 +8,10 @@ import {
   ChartBarIcon,
   CogIcon,
   BellIcon,
-  UserCircleIcon,
   Bars3Icon,
 } from "@heroicons/react/24/outline";
 import { useState } from "react";
-import { UserButton } from "@clerk/nextjs";
+import { UserButton, useUser } from "@clerk/nextjs";
 
 export default function DashboardLayout({
   children,
@@ -20,6 +19,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { user } = useUser();
 
   const navigation = [
     { name: "Dashboard", href: "/entrevistador", icon: HomeIcon },
@@ -70,15 +70,14 @@ export default function DashboardLayout({
               >
                 <BellIcon className="h-6 w-6" />
               </button>
-              <UserButton />
               <div className="flex items-center space-x-3">
-                <UserCircleIcon className="h-8 w-8 text-gray-400" />
+                <UserButton />
                 <div className="hidden md:block">
                   <p className="text-sm font-medium text-white">
-                    Entrevistador
+                    {user?.fullName}
                   </p>
                   <p className="text-xs text-gray-400">
-                    entrevistador@startraining.com
+                    {user?.primaryEmailAddress?.emailAddress}
                   </p>
                 </div>
               </div>
