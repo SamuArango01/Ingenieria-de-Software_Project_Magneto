@@ -1,7 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useUser } from "@clerk/nextjs";
 import {
   Card,
   CardContent,
@@ -19,25 +17,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { useSetupRole } from "../hooks/useSetupRole";
 
 export function SetupRoleCard() {
-  const { user } = useUser();
-  const [name, setName] = useState("");
-  const [role, setRole] = useState("");
-  const [otherRole, setOtherRole] = useState("");
-  const [experience, setExperience] = useState("");
-
-  useEffect(() => {
-    if (user?.fullName) {
-      setName(user.fullName);
-    }
-  }, [user]);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Aquí se manejaría el envío del formulario
-    console.log({ name, role, otherRole, experience });
-  };
+  const {
+    name,
+    setName,
+    role,
+    setRole,
+    otherRole,
+    setOtherRole,
+    experience,
+    setExperience,
+    handleSubmit,
+    user,
+  } = useSetupRole();
 
   return (
     <Card className="w-full max-w-md bg-gray-800/90 border-gray-700 backdrop-blur-sm shadow-2xl mx-auto lg:mx-0">
