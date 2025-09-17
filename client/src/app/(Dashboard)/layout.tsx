@@ -12,6 +12,7 @@ import {
   Bars3Icon,
 } from "@heroicons/react/24/outline";
 import { useState } from "react";
+import { UserButton } from "@clerk/nextjs";
 
 export default function DashboardLayout({
   children,
@@ -69,6 +70,7 @@ export default function DashboardLayout({
               >
                 <BellIcon className="h-6 w-6" />
               </button>
+              <UserButton />
               <div className="flex items-center space-x-3">
                 <UserCircleIcon className="h-8 w-8 text-gray-400" />
                 <div className="hidden md:block">
