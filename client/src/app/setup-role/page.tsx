@@ -1,3 +1,5 @@
-export default function SetupRolePage(){
-    return <h1>hola</h1>
+import { SetupRolePage } from "@/features/setup-role/setup-role";
+
+export default function SetupRole() {
+  return <SetupRolePage />;
 }
