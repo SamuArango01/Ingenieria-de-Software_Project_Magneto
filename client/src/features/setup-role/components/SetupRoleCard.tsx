@@ -77,7 +77,7 @@ export function SetupRoleCard() {
             </Select>
           </div>
           {role === "otro" && (
-            <div className="space-y-2">
+            <div className="space-y-2 animate-in fade-in slide-in-from-top-2 animate-out fade-out slide-out-to-top-2 duration-300">
               <Label htmlFor="other-role" className="text-white">
                 Especifica tu rol
               </Label>
