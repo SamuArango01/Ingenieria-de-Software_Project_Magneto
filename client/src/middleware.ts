@@ -3,6 +3,7 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 // pasar a otro archivo
 // estas son las rutas protegidas
 const ProtectedRoutes = [
+  "/setup-role",
   "/dashboard",
   "/entrevistador",
   "/profile",
