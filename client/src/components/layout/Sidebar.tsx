@@ -78,7 +78,15 @@ export default function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
                   {!isCollapsed && <span>{item.name}</span>}
                 </Link>
               </TooltipTrigger>
-              {isCollapsed && <TooltipContent side="right">{item.name}</TooltipContent>}
+              {isCollapsed && (
+                <TooltipContent
+                  side="right"
+                  className="bg-gray-700 text-white p-2 rounded-md shadow-lg"
+                  sideOffset={5}
+                >
+                  {item.name}
+                </TooltipContent>
+              )}
             </Tooltip>
           ))}
         </TooltipProvider>
@@ -103,7 +111,15 @@ export default function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
                 {!isCollapsed && <span>Salir del Dashboard</span>}
               </Link>
             </TooltipTrigger>
-            {isCollapsed && <TooltipContent side="right">Salir del Dashboard</TooltipContent>}
+            {isCollapsed && (
+              <TooltipContent
+                side="right"
+                className="bg-gray-700 text-white p-2 rounded-md shadow-lg"
+                sideOffset={5}
+              >
+                Salir del Dashboard
+              </TooltipContent>
+            )}
           </Tooltip>
         </TooltipProvider>
       </div>
