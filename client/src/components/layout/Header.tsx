@@ -20,7 +20,7 @@ export default function Header({
   const { user } = useUser();
 
   return (
-    <header className="bg-gray-900 border-b border-gray-800 shadow-lg h-16">
+    <header className="bg-gray-900 border-b border-gray-800 shadow-lg h-20">
       <div className="flex items-center justify-between h-full px-4 sm:px-6 lg:px-8">
         {/* Left section: Mobile toggle, Desktop toggle, Separator, Page Title */}
         <div className="flex items-center space-x-4">

@@ -46,13 +46,13 @@ export default function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
     >
       {/* Sidebar Header */}
       <div
-        className={`flex items-center h-16 border-b border-gray-800 transition-all duration-300 ease-in-out ${
+        className={`flex items-center h-20 border-b border-gray-800 transition-all duration-300 ease-in-out ${
           isCollapsed ? "justify-center" : "justify-start px-4"
         }`}
       >
         {!isCollapsed && (
           <div className="flex items-center">
-            <div className="h-8 w-8 bg-emerald-500 rounded-lg mr-3"></div>
+            <div className="h-10 w-10 bg-emerald-500 rounded-lg mr-3"></div>
             <h1 className="text-xl font-semibold">StarTraining</h1>
           </div>
         )}
