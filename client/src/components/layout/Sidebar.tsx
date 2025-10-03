@@ -8,10 +8,8 @@ import {
   BarChart2,
   Settings,
   LogOut,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
-import React, { useState } from "react";
+import React from "react";
 import {
   Tooltip,
   TooltipContent,
@@ -39,9 +37,7 @@ const navigation = [
   },
 ];
 
-export default function Sidebar() {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-
+export default function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
   return (
     <aside
       className={`hidden lg:flex lg:flex-col bg-gray-900 text-white border-r border-gray-800 transition-all duration-300 ease-in-out ${
@@ -51,7 +47,7 @@ export default function Sidebar() {
       {/* Sidebar Header */}
       <div
         className={`flex items-center h-16 border-b border-gray-800 transition-all duration-300 ease-in-out ${
-          isCollapsed ? "justify-center" : "justify-between px-4"
+          isCollapsed ? "justify-center" : "justify-start px-4"
         }`}
       >
         {!isCollapsed && (
@@ -60,16 +56,6 @@ export default function Sidebar() {
             <h1 className="text-xl font-semibold">StarTraining</h1>
           </div>
         )}
-        <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
-        >
-          {isCollapsed ? (
-            <ChevronRight className="h-6 w-6" />
-          ) : (
-            <ChevronLeft className="h-6 w-6" />
-          )}
-        </button>
       </div>
 
       {/* Navigation Links */}
