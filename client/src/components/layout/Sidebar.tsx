@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/tooltip";
 
 const navigation = [
-  { name: "Dashboard", href: "/entrevistador", icon: LayoutDashboard },
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   {
     name: "Entrevistas",
     href: "/entrevistador",
