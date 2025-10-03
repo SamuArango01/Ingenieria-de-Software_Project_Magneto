@@ -21,7 +21,7 @@ const navigation = [
   { name: "Dashboard", href: "/entrevistador", icon: LayoutDashboard },
   {
     name: "Entrevistas",
-    href: "/entrevistador/entrevistas",
+    href: "/entrevistador",
     icon: Users,
   },
   {
@@ -41,7 +41,7 @@ export default function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
   return (
     <aside
       className={`hidden lg:flex lg:flex-col bg-gray-900 text-white border-r border-gray-800 transition-all duration-300 ease-in-out ${
-        isCollapsed ? "w-20" : "w-64"
+        isCollapsed ? "w-20" : "w-72"
       }`}
     >
       {/* Sidebar Header */}
@@ -66,12 +66,12 @@ export default function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
               <TooltipTrigger asChild>
                 <Link
                   href={item.href}
-                  className={`flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-gray-700 hover:text-white transition-colors ${
+                  className={`flex items-center px-4 py-3 text-base font-medium rounded-md text-gray-300 hover:bg-gray-700 hover:text-white transition-colors ${
                     isCollapsed ? "justify-center" : ""
                   }`}
                 >
                   <item.icon
-                    className={`h-5 w-5 ${
+                    className={`h-6 w-6 ${
                       isCollapsed ? "mr-0" : "mr-3"
                     }`}
                   />
@@ -99,12 +99,12 @@ export default function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
             <TooltipTrigger asChild>
               <Link
                 href="/"
-                className={`flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-gray-700 hover:text-white transition-colors ${
+                className={`flex items-center px-4 py-3 text-base font-medium rounded-md text-gray-300 hover:bg-gray-700 hover:text-white transition-colors ${
                   isCollapsed ? "justify-center" : ""
                 }`}
               >
                 <LogOut
-                  className={`h-5 w-5 ${
+                  className={`h-6 w-6 ${
                     isCollapsed ? "mr-0" : "mr-3"
                   }`}
                 />

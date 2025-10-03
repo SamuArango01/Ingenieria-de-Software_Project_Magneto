@@ -47,7 +47,7 @@ export default function Header({
           </button>
 
           {/* Vertical Separator */}
-          <Separator orientation="vertical" className="h-8 bg-gray-700 hidden lg:block" />
+          <Separator orientation="vertical" className="w-px bg-gray-400 hidden lg:block" />
 
           {/* Page Title */}
           <h2 className="text-xl font-semibold text-white hidden lg:block">{pageTitle}</h2>
