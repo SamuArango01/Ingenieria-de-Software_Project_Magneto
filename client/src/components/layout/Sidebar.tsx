@@ -1,0 +1,128 @@
+"use client";
+
+import Link from "next/link";
+import {
+  LayoutDashboard,
+  Users,
+  FileText,
+  BarChart2,
+  Settings,
+  LogOut,
+} from "lucide-react";
+import React from "react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+const navigation = [
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  {
+    name: "Entrevistas",
+    href: "/entrevistador",
+    icon: Users,
+  },
+  {
+    name: "Reportes",
+    href: "/entrevistador/reportes",
+    icon: FileText,
+  },
+  { name: "Analisis", href: "/entrevistador/analisis", icon: BarChart2 },
+  {
+    name: "Configuracion",
+    href: "/entrevistador/configuracion",
+    icon: Settings,
+  },
+];
+
+export default function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
+  return (
+    <aside
+      className={`hidden lg:flex lg:flex-col bg-gray-900 text-white border-r border-gray-800 transition-all duration-300 ease-in-out ${
+        isCollapsed ? "w-20" : "w-72"
+      }`}
+    >
+      {/* Sidebar Header */}
+      <div
+        className={`flex items-center h-20 border-b border-gray-800 transition-all duration-300 ease-in-out ${
+          isCollapsed ? "justify-center" : "justify-start px-4"
+        }`}
+      >
+        {!isCollapsed && (
+          <div className="flex items-center">
+            <div className="h-10 w-10 bg-emerald-500 rounded-lg mr-3"></div>
+            <h1 className="text-xl font-semibold">StarTraining</h1>
+          </div>
+        )}
+      </div>
+
+      {/* Navigation Links */}
+      <nav className="flex-1 px-4 py-4 space-y-2">
+        <TooltipProvider>
+          {navigation.map((item) => (
+            <Tooltip key={item.name}>
+              <TooltipTrigger asChild>
+                <Link
+                  href={item.href}
+                  className={`flex items-center px-4 py-3 text-base font-medium rounded-md text-gray-300 hover:bg-gray-700 hover:text-white transition-colors ${
+                    isCollapsed ? "justify-center" : ""
+                  }`}
+                >
+                  <item.icon
+                    className={`h-6 w-6 ${
+                      isCollapsed ? "mr-0" : "mr-3"
+                    }`}
+                  />
+                  {!isCollapsed && <span>{item.name}</span>}
+                </Link>
+              </TooltipTrigger>
+              {isCollapsed && (
+                <TooltipContent
+                  side="right"
+                  className="bg-gray-700 text-white p-2 rounded-md shadow-lg"
+                  sideOffset={5}
+                >
+                  {item.name}
+                </TooltipContent>
+              )}
+            </Tooltip>
+          ))}
+        </TooltipProvider>
+      </nav>
+
+      {/* Sidebar Footer */}
+      <div className="border-t border-gray-800 p-4">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link
+                href="/"
+                className={`flex items-center px-4 py-3 text-base font-medium rounded-md text-gray-300 hover:bg-gray-700 hover:text-white transition-colors ${
+                  isCollapsed ? "justify-center" : ""
+                }`}
+              >
+                <LogOut
+                  className={`h-6 w-6 ${
+                    isCollapsed ? "mr-0" : "mr-3"
+                  }`}
+                />
+                {!isCollapsed && <span>Salir del Dashboard</span>}
+              </Link>
+            </TooltipTrigger>
+            {isCollapsed && (
+              <TooltipContent
+                side="right"
+                className="bg-gray-700 text-white p-2 rounded-md shadow-lg"
+                sideOffset={5}
+              >
+                Salir del Dashboard
+              </TooltipContent>
+            )}
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+    </aside>
+  );
+}
