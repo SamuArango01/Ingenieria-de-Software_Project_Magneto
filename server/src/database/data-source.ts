@@ -1,12 +1,12 @@
 import "reflect-metadata";
 import { DataSource } from "typeorm";
-import { User } from "../models/User";
-import { WorkField } from "../models/WorkField";
-import { UserConfiguration } from "../models/UserConfiguration";
-import { InterviewType } from "../models/InterviewType";
-import { Interview } from "../models/Interview";
-import { InterviewEvaluation } from "../models/InterviewEvaluation";
-import { InterviewQA } from "../models/InterviewQA";
+import { User } from "@/modules/users/entities/User";
+import { WorkField } from "@/modules/work-fields/entities/WorkField";
+import { UserConfiguration } from "@/modules/user-configurations/entities/UserConfiguration";
+import { InterviewType } from "@/modules/interview-types/entities/InterviewType";
+import { Interview } from "@/modules/interviews/entities/Interview";
+import { InterviewEvaluation } from "@/modules/interview-evaluations/entities/InterviewEvaluation";
+import { InterviewQA } from "@/modules/interview-qa/entities/InterviewQA";
 
 export const AppDataSource = new DataSource({
     type: "postgres",
@@ -17,7 +17,15 @@ export const AppDataSource = new DataSource({
     database: process.env.DB_DATABASE,
     synchronize: true, // Set to false in production
     logging: false,
-    entities: [User, WorkField, UserConfiguration, InterviewType, Interview, InterviewEvaluation, InterviewQA],
+    entities: [
+        User,
+        WorkField,
+        UserConfiguration,
+        InterviewType,
+        Interview,
+        InterviewEvaluation,
+        InterviewQA
+    ],
     migrations: [],
     subscribers: [],
 })
