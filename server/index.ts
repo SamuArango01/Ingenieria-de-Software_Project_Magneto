@@ -1,3 +1,4 @@
+import "dotenv/config";
 import "reflect-metadata";
 import express from "express";
 import cors from "cors";
@@ -10,11 +11,24 @@ import { marked } from "marked";
 import { AppDataSource } from "@/database/data-source";
 import router from "@/routes";
 
+
 const app = express();
 const PORT = process.env.PORT || 3211;
 
+AppDataSource.initialize()
+    .then(() => {
+        console.log("Data Source has been initialized!");
+        app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
+        });
+    })
+    .catch((err) => {
+        console.error("Error during Data Source initialization:", err);
+    });
+
 app.use(cors());
 app.use(express.json());
+app.use(morgan("dev")); // Add morgan for logging
 
 // Old routes
 const upload = multer({
@@ -250,13 +264,3 @@ app.post("/api/send-email", async (req, res) => {
 // New routes
 app.use("/api/v1", router);
 
-AppDataSource.initialize()
-    .then(() => {
-        console.log("Data Source has been initialized!");
-        app.listen(PORT, () => {
-            console.log(`Server running on port ${PORT}`);
-        });
-    })
-    .catch((err) => {
-        console.error("Error during Data Source initialization:", err);
-    });
