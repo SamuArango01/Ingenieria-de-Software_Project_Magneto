@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import express from "express";
 import cors from "cors";
 import multer from "multer";
@@ -5,7 +6,9 @@ import fs from "fs";
 import { transcribeAudio } from "./helpers/TranscribeAudio";
 import { generateContent } from "./helpers/GenerateContent";
 import nodemailer from "nodemailer";
-import { marked } from "marked";  
+import { marked } from "marked";
+import { AppDataSource } from "@/database/data-source";
+import router from "@/routes";
 
 const app = express();
 const PORT = process.env.PORT || 3211;
@@ -13,15 +16,7 @@ const PORT = process.env.PORT || 3211;
 app.use(cors());
 app.use(express.json());
 
-// Configuración del transporter de nodemailer
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD // Usa App Password de Gmail
-  },
-});
-
+// Old routes
 const upload = multer({
   dest: "uploads/",
   limits: {
@@ -36,7 +31,6 @@ if (!fs.existsSync("uploads")) {
 app.get("/", (_, res) => {
   res.json({ message: "Funcionaaaa" });
 });
-
 
 app.post("/api/audio", upload.single("audio"), async (req, res) => {
   try {
@@ -88,7 +82,6 @@ app.post("/api/audio", upload.single("audio"), async (req, res) => {
   }
 });
 
-
 app.post("/api/summary", async (req, res) => {
   try {
     const { interviewHistory } = req.body;
@@ -131,6 +124,13 @@ ${conversation}
   }
 });
 
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASSWORD // Usa App Password de Gmail
+  },
+});
 
 app.post("/api/send-email", async (req, res) => {
   try {
@@ -247,6 +247,16 @@ app.post("/api/send-email", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// New routes
+app.use("/api/v1", router);
+
+AppDataSource.initialize()
+    .then(() => {
+        console.log("Data Source has been initialized!");
+        app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
+        });
+    })
+    .catch((err) => {
+        console.error("Error during Data Source initialization:", err);
+    });

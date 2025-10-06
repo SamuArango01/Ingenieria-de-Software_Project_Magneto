@@ -27,6 +27,7 @@
     "jspdf": "^3.0.3",
     "marked": "^16.3.0",
     "multer": "^2.0.2",
+    "neverthrow": "^8.2.0",
     "nodemailer": "^7.0.6",
     "pg": "^8.16.3",
     "reflect-metadata": "^0.2.2",
