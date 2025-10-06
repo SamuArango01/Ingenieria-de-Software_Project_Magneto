@@ -1,6 +1,5 @@
-import { Request, Response } from 'express';
-import { InterviewTypeService } from '@/modules/interview-types/services/InterviewTypeService';
-import { IInterviewTypeService } from '@/modules/interview-types/interfaces/IInterviewTypeService';
+import type { Request, Response } from 'express';
+import type { IInterviewTypeService } from '@/modules/interview-types/interfaces/IInterviewTypeService';
 
 export class InterviewTypeController {
     private interviewTypeService: IInterviewTypeService;

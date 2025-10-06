@@ -1,7 +1,7 @@
 import { ok, err, Result } from 'neverthrow';
 import { InterviewType } from "@/modules/interview-types/entities/InterviewType";
-import { IInterviewTypeRepository } from "@/modules/interview-types/interfaces/IInterviewTypeRepository";
-import { IInterviewTypeService } from "@/modules/interview-types/interfaces/IInterviewTypeService";
+import type { IInterviewTypeRepository } from "@/modules/interview-types/interfaces/IInterviewTypeRepository";
+import type { IInterviewTypeService } from "@/modules/interview-types/interfaces/IInterviewTypeService";
 import { InterviewTypeRepository } from "@/modules/interview-types/repositories/InterviewTypeRepository";
 
 // Custom Error Types
