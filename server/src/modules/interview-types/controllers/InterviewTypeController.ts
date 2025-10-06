@@ -1,11 +1,12 @@
-import type { Request, Response } from 'express';
+import { Request, Response } from 'express';
 import { InterviewTypeService } from '@/modules/interview-types/services/InterviewTypeService';
+import { IInterviewTypeService } from '@/modules/interview-types/interfaces/IInterviewTypeService';
 
 export class InterviewTypeController {
-    private interviewTypeService: InterviewTypeService;
+    private interviewTypeService: IInterviewTypeService;
 
-    constructor() {
-        this.interviewTypeService = new InterviewTypeService();
+    constructor(interviewTypeService: IInterviewTypeService) {
+        this.interviewTypeService = interviewTypeService;
     }
 
     async getAvailableTypesForUser(req: Request, res: Response): Promise<void> {

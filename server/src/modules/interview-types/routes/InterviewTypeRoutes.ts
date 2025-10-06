@@ -1,8 +1,10 @@
 import { Router } from 'express';
 import { InterviewTypeController } from '@/modules/interview-types/controllers/InterviewTypeController';
+import { InterviewTypeService } from '@/modules/interview-types/services/InterviewTypeService';
 
 const router = Router();
-const interviewTypeController = new InterviewTypeController();
+const interviewTypeService = new InterviewTypeService();
+const interviewTypeController = new InterviewTypeController(interviewTypeService);
 
 router.get('/available', (req, res) => interviewTypeController.getAvailableTypesForUser(req, res));
 router.post('/', (req, res) => interviewTypeController.createInterviewType(req, res));
