@@ -17,6 +17,7 @@
     "start": "bun index.ts"
   },
   "dependencies": {
+    "@clerk/express": "^1.7.37",
     "@deepgram/sdk": "^4.11.2",
     "@google/genai": "^1.14.0",
     "@sendgrid/mail": "^8.1.6",
