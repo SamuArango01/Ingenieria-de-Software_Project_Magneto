@@ -10,6 +10,7 @@ import nodemailer from "nodemailer";
 import { marked } from "marked";
 import { AppDataSource } from "@/database/data-source";
 import router from "@/routes";
+import morgan from "morgan";
 
 
 const app = express();
@@ -30,6 +31,10 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan("dev")); // Add morgan for logging
 
+// New routes
+app.use("/api/v1", router);
+
+// migrar todas esas
 // Old routes
 const upload = multer({
   dest: "uploads/",
@@ -260,7 +265,4 @@ app.post("/api/send-email", async (req, res) => {
     });
   }
 });
-
-// New routes
-app.use("/api/v1", router);
 
