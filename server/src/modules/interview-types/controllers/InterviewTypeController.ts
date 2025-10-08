@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 import type { IInterviewTypeService } from '@/modules/interview-types/interfaces/IInterviewTypeService';
+import { getAuth } from '@clerk/express';
 
 export class InterviewTypeController {
     private interviewTypeService: IInterviewTypeService;
@@ -9,8 +10,11 @@ export class InterviewTypeController {
     }
 
     async getAvailableTypesForUser(req: Request, res: Response): Promise<void> {
-        // @ts-ignore
-        const userId = req.auth.userId;
+        const { userId } = getAuth(req);
+        if (!userId) {
+            res.status(401).json({ message: 'Unauthorized' });
+            return;
+        }
         const result = await this.interviewTypeService.getAvailableTypesForUser(userId);
         result.match(
             (interviewTypes) => res.json(interviewTypes),
@@ -19,8 +23,11 @@ export class InterviewTypeController {
     }
 
     async createInterviewType(req: Request, res: Response): Promise<void> {
-        // @ts-ignore
-        const userId = req.auth.userId;
+        const { userId } = getAuth(req);
+        if (!userId) {
+            res.status(401).json({ message: 'Unauthorized' });
+            return;
+        }
         const { name, description } = req.body;
         const result = await this.interviewTypeService.createInterviewType(userId, name, description);
         result.match(
@@ -36,8 +43,11 @@ export class InterviewTypeController {
     }
 
     async listUserInterviewTypes(req: Request, res: Response): Promise<void> {
-        // @ts-ignore
-        const userId = req.auth.userId;
+        const { userId } = getAuth(req);
+        if (!userId) {
+            res.status(401).json({ message: 'Unauthorized' });
+            return;
+        }
         const result = await this.interviewTypeService.listUserInterviewTypes(userId);
         result.match(
             (interviewTypes) => res.json(interviewTypes),
@@ -46,8 +56,11 @@ export class InterviewTypeController {
     }
 
     async updateInterviewType(req: Request, res: Response): Promise<void> {
-        // @ts-ignore
-        const userId = req.auth.userId;
+        const { userId } = getAuth(req);
+        if (!userId) {
+            res.status(401).json({ message: 'Unauthorized' });
+            return;
+        }
         const { id } = req.params;
         const { name, description } = req.body;
         const result = await this.interviewTypeService.updateInterviewType(userId, Number(id), name, description);
@@ -66,8 +79,11 @@ export class InterviewTypeController {
     }
 
     async toggleInterviewTypeActive(req: Request, res: Response): Promise<void> {
-        // @ts-ignore
-        const userId = req.auth.userId;
+        const { userId } = getAuth(req);
+        if (!userId) {
+            res.status(401).json({ message: 'Unauthorized' });
+            return;
+        }
         const { id } = req.params;
         const result = await this.interviewTypeService.toggleInterviewTypeActive(userId, Number(id));
         result.match(

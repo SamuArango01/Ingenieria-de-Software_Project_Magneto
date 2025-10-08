@@ -11,20 +11,7 @@ import { marked } from "marked";
 import { AppDataSource } from "@/database/data-source";
 import router from "@/routes";
 import morgan from "morgan";
-
-
-// Middleware to mock Clerk authentication for development
-const mockAuthMiddleware = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-  // This is a mock user ID. In a real scenario, Clerk's middleware would populate this.
-  // We add a check for NODE_ENV to ensure this only runs in development.
-  if (process.env.NODE_ENV !== 'production') {
-    // @ts-ignore
-    req.auth = {
-      userId: 'user_mock_clerk_12345', // A static mock user ID for testing
-    };
-  }
-  next();
-};
+import { clerkMiddleware } from '@clerk/express';
 
 const app = express();
 const PORT = process.env.PORT || 3211;
@@ -44,8 +31,8 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan("dev")); // Add morgan for logging
 
-// Use the mock auth middleware BEFORE your main router
-app.use(mockAuthMiddleware);
+// Use Clerk's middleware
+app.use(clerkMiddleware());
 
 // New routes
 app.use("/api/v1", router);
