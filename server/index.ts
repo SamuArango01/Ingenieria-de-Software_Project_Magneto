@@ -1,3 +1,5 @@
+import "dotenv/config";
+import "reflect-metadata";
 import express from "express";
 import cors from "cors";
 import multer from "multer";
@@ -5,23 +7,51 @@ import fs from "fs";
 import { transcribeAudio } from "./helpers/TranscribeAudio";
 import { generateContent } from "./helpers/GenerateContent";
 import nodemailer from "nodemailer";
-import { marked } from "marked";  
+import { marked } from "marked";
+import { AppDataSource } from "@/database/data-source";
+import router from "@/routes";
+import morgan from "morgan";
+
+
+// Middleware to mock Clerk authentication for development
+const mockAuthMiddleware = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  // This is a mock user ID. In a real scenario, Clerk's middleware would populate this.
+  // We add a check for NODE_ENV to ensure this only runs in development.
+  if (process.env.NODE_ENV !== 'production') {
+    // @ts-ignore
+    req.auth = {
+      userId: 'user_mock_clerk_12345', // A static mock user ID for testing
+    };
+  }
+  next();
+};
 
 const app = express();
 const PORT = process.env.PORT || 3211;
 
+AppDataSource.initialize()
+    .then(() => {
+        console.log("Data Source has been initialized!");
+        app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
+        });
+    })
+    .catch((err) => {
+        console.error("Error during Data Source initialization:", err);
+    });
+
 app.use(cors());
 app.use(express.json());
+app.use(morgan("dev")); // Add morgan for logging
 
-// Configuración del transporter de nodemailer
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD // Usa App Password de Gmail
-  },
-});
+// Use the mock auth middleware BEFORE your main router
+app.use(mockAuthMiddleware);
 
+// New routes
+app.use("/api/v1", router);
+
+// migrar todas esas
+// Old routes
 const upload = multer({
   dest: "uploads/",
   limits: {
@@ -36,7 +66,6 @@ if (!fs.existsSync("uploads")) {
 app.get("/", (_, res) => {
   res.json({ message: "Funcionaaaa" });
 });
-
 
 app.post("/api/audio", upload.single("audio"), async (req, res) => {
   try {
@@ -88,7 +117,6 @@ app.post("/api/audio", upload.single("audio"), async (req, res) => {
   }
 });
 
-
 app.post("/api/summary", async (req, res) => {
   try {
     const { interviewHistory } = req.body;
@@ -131,6 +159,13 @@ ${conversation}
   }
 });
 
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASSWORD // Usa App Password de Gmail
+  },
+});
 
 app.post("/api/send-email", async (req, res) => {
   try {
@@ -247,6 +282,3 @@ app.post("/api/send-email", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
