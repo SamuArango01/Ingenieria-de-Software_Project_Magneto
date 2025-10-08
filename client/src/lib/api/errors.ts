@@ -46,18 +46,8 @@ export const normalizeErrorMessage = (error: AxiosError): string => {
   if (!error.response?.data) {
     return error.message || 'Error de conexión';
   }
-
-  // Usar unknown para backend con estructura indefinida, luego validar propiedades
-  const json = error.response.data as unknown;
-  
-  // Aplicar tu lógica de normalización exacta con validación de tipos
-  const errorMessage = 
-    (json as { error?: { message?: string } })?.error?.message ||
-    (json as { statusText?: string })?.statusText ||
-    (json as { error?: { error?: string } })?.error?.error ||
-    (json as { error?: string })?.error ||
-    (json as { message?: string })?.message ||
-    'Error desconocido';
+  const json = error.response.data as ApiError
+  const errorMessage = json?.message ?? "Error desconocido";
 
   return errorMessage;
 };
