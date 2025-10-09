@@ -1,6 +1,6 @@
 import { apiClient } from '@/lib/api';
 import { extractNormalizedApiError } from '@/lib/api/errors';
-import type { InterviewType } from './interview-type.types';
+import type { InterviewType } from '@/features/interview-types/models/interview-type.model';
 
 /**
  * Obtiene todos los tipos de entrevista disponibles para el usuario (públicos y propios).
