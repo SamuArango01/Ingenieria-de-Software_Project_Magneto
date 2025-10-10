@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import { getAuth } from '@clerk/express';
-import { IUserConfigurationService } from '@/modules/user-configurations/interfaces/IUserConfigurationService';
+import type { IUserConfigurationService } from '@/modules/user-configurations/interfaces/IUserConfigurationService';
 import { UserConfigurationService } from '@/modules/user-configurations/services/UserConfigurationService';
 
 export class UserConfigurationController {
