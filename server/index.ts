@@ -11,7 +11,7 @@ import { marked } from "marked";
 import { AppDataSource } from "@/database/data-source";
 import router from "@/routes";
 import morgan from "morgan";
-import { clerkMiddleware } from '@clerk/express';
+import { clerkMiddleware, getAuth } from '@clerk/express';
 import { InterviewTypeService } from './src/modules/interview-types/services/InterviewTypeService';
 
 const app = express();
@@ -56,7 +56,7 @@ app.get("/", (_, res) => {
   res.json({ message: "Funcionaaaa" });
 });
 
-app.post("/api/audio", upload.single("audio"), async (req, res) => {
+app.post("/api/v1/audio", upload.single("audio"), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: "No audio file provided" });
@@ -112,7 +112,7 @@ app.post("/api/audio", upload.single("audio"), async (req, res) => {
   }
 });
 
-app.post("/api/summary", async (req, res) => {
+app.post("/api/v1/summary", async (req, res) => {
   try {
     const { interviewHistory } = req.body;
 

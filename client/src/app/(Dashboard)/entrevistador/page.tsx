@@ -4,6 +4,16 @@ import { MicrophoneIcon, ArrowPathIcon } from "@heroicons/react/24/solid";
 import { useState, useRef } from "react";
 import { useUser } from "@clerk/nextjs";
 import ReactMarkdown from 'react-markdown';
+import { useQuery } from '@tanstack/react-query';
+import { getAvailableInterviewTypes } from '@/features/interview-types/services/interview-type.service';
+import apiClient from '@/lib/api/client';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function EntrevistadorPage() {
   const [isRecording, setIsRecording] = useState(false);
@@ -24,7 +34,12 @@ export default function EntrevistadorPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [selectedInterviewTypeId, setSelectedInterviewTypeId] = useState<string | null>("generic");
 
+  const { data: interviewTypes, isLoading: isLoadingInterviewTypes } = useQuery({
+    queryKey: ['availableInterviewTypes'],
+    queryFn: () => getAvailableInterviewTypes(),
+  });
  
   const restartInterview = () => {
     
@@ -115,16 +130,21 @@ const sendAudioToBackend = async (audioBlob: Blob) => {
     const formData = new FormData();
     formData.append("audio", audioBlob, "recording.webm");
 
-    const response = await fetch("http://localhost:3211/api/audio", {
-      method: "POST",
-      body: formData,
+    const url = selectedInterviewTypeId != 'generic'
+      ? `/audio?interviewTypeId=${selectedInterviewTypeId}` 
+      : "/audio";
+
+    const response = await apiClient.post(url, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
     });
 
-    if (!response.ok) {
+    if (response.status !== 200) {
       throw new Error("No se pudo transcribir el audio. Por favor, intenta hablar más claro o verifica tu micrófono.");
     }
 
-    const result = await response.json();
+    const result = response.data;
     console.log('Audio sent successfully:', result);
 
     if (result.success) {
@@ -267,6 +287,25 @@ const sendAudioToBackend = async (audioBlob: Blob) => {
         </h1>
 
         <div className="flex flex-col items-center space-y-6">
+          <div className="w-full max-w-xs">
+            <Select onValueChange={setSelectedInterviewTypeId} value={selectedInterviewTypeId || ""}>
+              <SelectTrigger className="w-full bg-gray-700 text-white border-gray-600">
+                <SelectValue placeholder="Selecciona un tipo de entrevista" />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-800 text-white border-gray-700">
+                {isLoadingInterviewTypes ? (
+                  <SelectItem value="loading" disabled>Cargando tipos...</SelectItem>
+                ) : (
+                  <>
+                    <SelectItem value="generic" >Sin tipo específico (Genérico)</SelectItem>
+                    {interviewTypes?.map((type) => (
+                      <SelectItem key={type.id} value={String(type.id)}>{type.name}</SelectItem>
+                    ))}
+                  </>
+                )}
+              </SelectContent>
+            </Select>
+          </div>
           <button
             type="button"
             onClick={handleMicrophoneClick}
