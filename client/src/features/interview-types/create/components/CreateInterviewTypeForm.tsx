@@ -83,6 +83,13 @@ export function CreateInterviewTypeForm({
                 </FormItem>
               )}
             />
+            <Alert className="mt-4">
+              <Info className="h-4 w-4" />
+              <AlertTitle>Visibilidad</AlertTitle>
+              <AlertDescription>
+                Los tipos de entrevista que crees aquí serán privados y solo visibles para ti.
+              </AlertDescription>
+            </Alert>
           </CardContent>
           <CardFooter>
             <Button type="submit" disabled={isLoading}>
