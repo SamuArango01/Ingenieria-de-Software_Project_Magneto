@@ -26,10 +26,10 @@ export function InterviewTypeList({
 }: InterviewTypeListProps) {
   if (interviewTypes.length === 0) {
     return (
-      <div className="text-center text-muted-foreground py-12 border rounded-lg">
-        <Inbox className="mx-auto h-12 w-12 text-gray-400" />
-        <h3 className="mt-2 text-sm font-medium">No hay tipos de entrevista</h3>
-        <p className="mt-1 text-sm">Crea uno nuevo para empezar.</p>
+      <div className="text-center py-12 border rounded-lg bg-gray-800">
+        <Inbox className="mx-auto h-12 w-12 text-green-400" />
+        <h3 className="mt-2 text-lg font-semibold text-gray-200">No hay tipos de entrevista</h3>
+        <p className="mt-1 text-sm text-gray-400">Crea uno nuevo para empezar.</p>
       </div>
     );
   }
@@ -46,7 +46,7 @@ export function InterviewTypeList({
         </TableHeader>
         <TableBody>
           {interviewTypes.map((type) => (
-            <TableRow key={type.id} className="hover:bg-muted/50">
+            <TableRow key={type.id} className="hover:bg-gray-700">
               <TableCell className="font-medium">{type.name}</TableCell>
               <TableCell>
                 {type.isPublic ? (

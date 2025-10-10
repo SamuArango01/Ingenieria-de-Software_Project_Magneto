@@ -15,13 +15,13 @@ import {
  * que la aplicación se ha montado en el cliente.
  */
 export function AxiosInterceptorProvider({ children }: { children: React.ReactNode }) {
-  const { getToken, signOut } = useAuth();
+  const { getToken, signOut, isLoaded } = useAuth();
 
   useEffect(() => {
     setupRequestInterceptor(apiClient, getToken);
     setupResponseInterceptor(apiClient, signOut);
     setupAuthErrorInterceptor(apiClient, signOut);
-  }, [getToken, signOut]);
+  }, [getToken, signOut, isLoaded]);
 
   return <>{children}</>;
 }

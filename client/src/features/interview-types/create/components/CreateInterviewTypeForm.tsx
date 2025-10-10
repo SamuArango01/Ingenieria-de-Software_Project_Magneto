@@ -39,10 +39,10 @@ export function CreateInterviewTypeForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="w-full max-w-2xl">
-        <Card>
+        <Card className="w-full max-w-2xl bg-gray-800">
           <CardHeader>
-            <CardTitle>Crear Nuevo Tipo de Entrevista</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-white">Crear Nuevo Tipo de Entrevista</CardTitle>
+            <CardDescription className="text-gray-300">
               Define un nuevo tipo de entrevista con un prompt personalizado para la IA.
             </CardDescription>
           </CardHeader>
@@ -52,11 +52,15 @@ export function CreateInterviewTypeForm({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nombre del Tipo de Entrevista</FormLabel>
+                  <FormLabel className="text-gray-200">Nombre del Tipo de Entrevista</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ej: Entrevista para Devops" {...field} />
+                    <Input 
+                      className="bg-gray-700 text-white border-gray-600 placeholder-gray-900"
+                      placeholder="Ej: Entrevista para Devops" 
+                      {...field} 
+                    />
                   </FormControl>
-                  <FormDescription>
+                  <FormDescription className="text-gray-400">
                     Un nombre corto y descriptivo.
                   </FormDescription>
                   <FormMessage />
@@ -68,23 +72,24 @@ export function CreateInterviewTypeForm({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Prompt para la IA (Descripción)</FormLabel>
+                  <FormLabel className="text-gray-200">Prompt para la IA (Descripción)</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Ej: Eres un entrevistador experto en DevOps. Haz preguntas sobre CI/CD, Kubernetes y Terraform..."
+                      className="bg-gray-700 text-white border-gray-600 placeholder-gray-900"
+                      placeholder="Ej: Eres un entrevistador técnico experto en arquitectura de software. Haz preguntas profundas sobre patrones de diseño, microservicios y escalabilidad..."
                       rows={8}
                       {...field}
                     />
                   </FormControl>
-                  <FormDescription>
+                  <FormDescription className="text-gray-400">
                     Este texto le dirá a la IA cómo debe comportarse.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Alert className="mt-4">
-              <Info className="h-4 w-4" />
+            <Alert className="mt-4 bg-blue-950 text-blue-200 border-blue-700">
+              <Info className="h-4 w-4 text-blue-400" />
               <AlertTitle>Visibilidad</AlertTitle>
               <AlertDescription>
                 Los tipos de entrevista que crees aquí serán privados y solo visibles para ti.
@@ -92,7 +97,7 @@ export function CreateInterviewTypeForm({
             </Alert>
           </CardContent>
           <CardFooter>
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isLoading} className="bg-green-600 text-white hover:bg-green-700">
               {isLoading ? 'Creando...' : 'Crear Tipo de Entrevista'}
             </Button>
           </CardFooter>

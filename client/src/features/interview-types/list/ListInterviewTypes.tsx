@@ -42,14 +42,14 @@ export function ListInterviewTypes() {
   } = useInterviewTypes();
 
   return (
-    <Card className="w-full">
+    <Card className="w-full bg-gray-800">
       <CardHeader>
         <div className="flex justify-between items-center">
           <div>
-            <CardTitle>Tipos de Entrevista</CardTitle>
-            <CardDescription>Gestiona los tipos de entrevista disponibles.</CardDescription>
+            <CardTitle className="text-white">Tipos de Entrevista</CardTitle>
+            <CardDescription className="text-gray-300">Gestiona los tipos de entrevista disponibles.</CardDescription>
           </div>
-          <Button onClick={() => router.push('/dashboard/interview-types/create')}>
+          <Button className="bg-green-600 text-white hover:bg-green-700" onClick={() => router.push('/interview-types/create')}>
             Crear Nuevo Tipo
           </Button>
         </div>
