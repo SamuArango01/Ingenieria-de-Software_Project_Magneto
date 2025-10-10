@@ -1,3 +1,6 @@
+// hay demasiada basura en este archivo
+// limpiar
+
 import "dotenv/config";
 import "reflect-metadata";
 import express from "express";
@@ -12,6 +15,7 @@ import { AppDataSource } from "@/database/data-source";
 import router from "@/routes";
 import morgan from "morgan";
 import { clerkMiddleware, getAuth } from '@clerk/express';
+import { syncUserMiddleware } from "@/middleware/syncUserMiddleware";
 import { InterviewTypeService } from './src/modules/interview-types/services/InterviewTypeService';
 
 const app = express();
@@ -35,6 +39,9 @@ app.use(morgan("dev")); // Add morgan for logging
 
 // Use Clerk's middleware
 app.use(clerkMiddleware());
+
+// sync user with database middleware
+app.use(syncUserMiddleware);
 
 // New routes
 app.use("/api/v1", router);
