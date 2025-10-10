@@ -5,8 +5,27 @@ import { useRouter } from 'next/navigation';
 import { useInterviewTypes } from './hooks/useInterviewTypes';
 import { InterviewTypeFilters } from './components/InterviewTypeFilters';
 import { InterviewTypeList } from './components/InterviewTypeList';
-import { Skeleton } from '@/components/ui/skeleton'; // Para el estado de carga
+import { Skeleton } from '@/components/ui/skeleton';
 import type { ApiError } from '@/lib/api';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+
+// Componente específico para el esqueleto de la tabla
+function TableSkeleton() {
+  return (
+    <div className="border rounded-lg p-4 space-y-2">
+      <Skeleton className="h-8 w-full" />
+      <Skeleton className="h-8 w-full" />
+      <Skeleton className="h-8 w-full" />
+      <Skeleton className="h-8 w-full" />
+    </div>
+  );
+}
 
 // Componente Ensamblador
 export function ListInterviewTypes() {
@@ -23,40 +42,39 @@ export function ListInterviewTypes() {
   } = useInterviewTypes();
 
   return (
-    <div className="w-full space-y-4">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Tipos de Entrevista</h1>
-        <Button onClick={() => router.push('/dashboard/interview-types/create')}>
-          Crear Nuevo Tipo
-        </Button>
-      </div>
-      
-      <InterviewTypeFilters 
-        activeFilter={activeFilter} 
-        onFilterChange={handleFilterChange} 
-      />
-
-      <div>
-        {isLoading && (
-          <div className="space-y-2 border rounded-lg p-4">
-            <Skeleton className="h-8 w-full" />
-            <Skeleton className="h-8 w-full" />
-            <Skeleton className="h-8 w-full" />
+    <Card className="w-full">
+      <CardHeader>
+        <div className="flex justify-between items-center">
+          <div>
+            <CardTitle>Tipos de Entrevista</CardTitle>
+            <CardDescription>Gestiona los tipos de entrevista disponibles.</CardDescription>
           </div>
-        )}
-        {isError && (
-          <p className="text-center text-red-500 py-8">
-            Error al cargar los datos: {(error as ApiError).message}
-          </p>
-        )}
-        {!isLoading && !isError && (
-          <InterviewTypeList 
-            interviewTypes={interviewTypes} 
-            onToggleActive={handleToggleActive}
-            isToggleLoading={isToggleLoading}
-          />
-        )}
-      </div>
-    </div>
+          <Button onClick={() => router.push('/dashboard/interview-types/create')}>
+            Crear Nuevo Tipo
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <InterviewTypeFilters 
+          activeFilter={activeFilter} 
+          onFilterChange={handleFilterChange} 
+        />
+        <div>
+          {isLoading && <TableSkeleton />}
+          {isError && (
+            <div className="text-center py-8">
+              <p className="text-red-500">Error al cargar los datos: {(error as ApiError).message}</p>
+            </div>
+          )}
+          {!isLoading && !isError && (
+            <InterviewTypeList 
+              interviewTypes={interviewTypes} 
+              onToggleActive={handleToggleActive}
+              isToggleLoading={isToggleLoading}
+            />
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

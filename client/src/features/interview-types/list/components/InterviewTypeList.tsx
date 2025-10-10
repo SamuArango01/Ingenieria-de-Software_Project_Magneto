@@ -1,5 +1,6 @@
 'use client';
 
+import { Inbox } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -24,7 +25,13 @@ export function InterviewTypeList({
   isToggleLoading 
 }: InterviewTypeListProps) {
   if (interviewTypes.length === 0) {
-    return <p className="text-center text-muted-foreground py-8">No se encontraron tipos de entrevista.</p>;
+    return (
+      <div className="text-center text-muted-foreground py-12 border rounded-lg">
+        <Inbox className="mx-auto h-12 w-12 text-gray-400" />
+        <h3 className="mt-2 text-sm font-medium">No hay tipos de entrevista</h3>
+        <p className="mt-1 text-sm">Crea uno nuevo para empezar.</p>
+      </div>
+    );
   }
 
   return (
@@ -39,13 +46,13 @@ export function InterviewTypeList({
         </TableHeader>
         <TableBody>
           {interviewTypes.map((type) => (
-            <TableRow key={type.id}>
+            <TableRow key={type.id} className="hover:bg-muted/50">
               <TableCell className="font-medium">{type.name}</TableCell>
               <TableCell>
                 {type.isPublic ? (
                   <Badge variant="secondary">Público</Badge>
                 ) : (
-                  <Badge variant="outline">Privado</Badge>
+                  <Badge variant="success">Privado</Badge>
                 )}
               </TableCell>
               <TableCell className="text-right">
