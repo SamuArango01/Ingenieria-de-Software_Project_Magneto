@@ -61,6 +61,10 @@ export class InterviewTypeService implements IInterviewTypeService {
             return err({ type: 'InterviewTypeNotFoundError', message: "Interview type not found or you don't have permission to update it" });
         }
 
+        if (userId !== interviewType.createdBy){
+            return err({ type: 'InterviewTypeNotFoundError', message: "You don't have permission to update this interview type" });
+        }
+
         interviewType.name = name;
         interviewType.description = description;
 

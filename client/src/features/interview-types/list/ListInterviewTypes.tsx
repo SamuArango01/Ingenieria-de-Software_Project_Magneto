@@ -6,6 +6,7 @@ import { useInterviewTypes } from './hooks/useInterviewTypes';
 import { InterviewTypeFilters } from './components/InterviewTypeFilters';
 import { InterviewTypeList } from './components/InterviewTypeList';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@clerk/nextjs';
 import type { ApiError } from '@/lib/api';
 import {
   Card,
@@ -40,6 +41,7 @@ export function ListInterviewTypes() {
     handleToggleActive,
     isToggleLoading,
   } = useInterviewTypes();
+  const { userId } = useAuth();
 
   return (
     <Card className="w-full bg-gray-800">
@@ -71,6 +73,7 @@ export function ListInterviewTypes() {
               interviewTypes={interviewTypes} 
               onToggleActive={handleToggleActive}
               isToggleLoading={isToggleLoading}
+              currentUserId={userId}
             />
           )}
         </div>

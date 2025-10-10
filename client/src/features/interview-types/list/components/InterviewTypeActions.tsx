@@ -9,26 +9,31 @@ interface InterviewTypeActionsProps {
   interviewType: InterviewType;
   onToggleActive: (id: number) => void;
   isToggleLoading: boolean;
+  currentUserId: string | null | undefined;
 }
 
-export function InterviewTypeActions({ 
-  interviewType, 
-  onToggleActive, 
-  isToggleLoading 
+export function InterviewTypeActions({
+  interviewType,
+  onToggleActive,
+  isToggleLoading,
+  currentUserId,
 }: InterviewTypeActionsProps) {
   const router = useRouter();
 
+  const canEdit = interviewType.createdBy === currentUserId;
+
   return (
     <div className="flex items-center space-x-2">
-      <Button 
-        variant="outline" 
-        size="sm"
-        onClick={() => router.push(`/dashboard/interview-types/edit/${interviewType.id}`)}
-      >
-        Editar
-      </Button>
-      <Switch
-        checked={interviewType.isActive}
+      {canEdit && (
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => router.push(`/dashboard/interview-types/edit/${interviewType.id}`)}
+        >
+          Editar
+        </Button>
+      )}
+      <Switch        checked={interviewType.isActive}
         onCheckedChange={() => onToggleActive(interviewType.id)}
         disabled={isToggleLoading}
         aria-label="Activar o desactivar"
