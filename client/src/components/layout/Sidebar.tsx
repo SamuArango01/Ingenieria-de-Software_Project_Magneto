@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import React from 'react';
-import { LogOut } from 'lucide-react';
+import { ChevronRight, LogOut } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { sidebarConfig, type SidebarItem } from '@/lib/navigation/sidebar-config';
@@ -22,24 +22,34 @@ import {
 // Componente para un solo item del menú (recursivo o simple)
 function SidebarMenuItem({ item, isCollapsed }: { item: SidebarItem; isCollapsed: boolean }) {
   const pathname = usePathname();
+  const [isOpen, setIsOpen] = React.useState(false);
 
   const isActive = item.href ? pathname === item.href : false;
-  const isChildActive = item.children ? item.children.some(child => child.href === pathname) : false;
+  const isChildActive = React.useMemo(() => {
+    if (!item.children) return false;
+    return item.children.some(child => child.href === pathname);
+  }, [item.children, pathname]);
 
   // Si es un item con sub-menú
   if (item.children) {
     return (
-      <Collapsible open={isCollapsed ? false : undefined}>
+      <Collapsible open={isOpen} onOpenChange={setIsOpen} className="space-y-1">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
               <CollapsibleTrigger className={cn(
-                'flex items-center w-full px-4 py-3 text-base font-medium rounded-md text-gray-300 hover:bg-gray-700 hover:text-white transition-colors',
+                'flex items-center w-full px-4 py-3 text-base font-medium rounded-md text-gray-300 hover:bg-gray-800 hover:text-white transition-colors group',
                 isCollapsed ? 'justify-center' : '',
-                isChildActive && 'bg-gray-700'
+                (isChildActive || (isOpen && !isCollapsed)) && 'bg-gray-800'
               )}>
                 <item.icon className={cn('h-6 w-6', isCollapsed ? 'mr-0' : 'mr-3')} />
-                {!isCollapsed && <span className="flex-1 text-left">{item.title}</span>}
+                {!isCollapsed && <span className="flex-1 text-left truncate">{item.title}</span>}
+                {!isCollapsed && (
+                  <ChevronRight className={cn(
+                    'h-4 w-4 transform transition-transform duration-200',
+                    isOpen && 'rotate-90'
+                  )} />
+                )}
               </CollapsibleTrigger>
             </TooltipTrigger>
             {isCollapsed && <TooltipContent side="right">{item.title}</TooltipContent>}
@@ -56,11 +66,11 @@ function SidebarMenuItem({ item, isCollapsed }: { item: SidebarItem; isCollapsed
                   href={child.href}
                   className={cn(
                     'flex items-center w-full px-4 py-2 text-sm font-medium rounded-md text-gray-400 hover:bg-gray-700 hover:text-white transition-colors',
-                    isSubActive && 'text-white bg-gray-600'
+                    isSubActive && 'text-white bg-emerald-600'
                   )}
                 >
                   {child.icon && <child.icon className="h-4 w-4 mr-2" />} 
-                  {child.title}
+                  <span className="truncate">{child.title}</span>
                 </Link>
               );
             })}
@@ -78,13 +88,13 @@ function SidebarMenuItem({ item, isCollapsed }: { item: SidebarItem; isCollapsed
           <Link
             href={item.href!}
             className={cn(
-              'flex items-center px-4 py-3 text-base font-medium rounded-md text-gray-300 hover:bg-gray-700 hover:text-white transition-colors',
+              'flex items-center px-4 py-3 text-base font-medium rounded-md text-gray-300 hover:bg-gray-800 hover:text-white transition-colors',
               isCollapsed ? 'justify-center' : '',
-              isActive && 'bg-gray-700'
+              isActive && 'text-white bg-emerald-600'
             )}
           >
             <item.icon className={cn('h-6 w-6', isCollapsed ? 'mr-0' : 'mr-3')} />
-            {!isCollapsed && <span>{item.title}</span>}
+            {!isCollapsed && <span className="truncate">{item.title}</span>}
           </Link>
         </TooltipTrigger>
         {isCollapsed && <TooltipContent side="right">{item.title}</TooltipContent>}

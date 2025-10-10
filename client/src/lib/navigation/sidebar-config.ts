@@ -39,12 +39,12 @@ export const sidebarConfig: SidebarItem[] = [
     children: [
       {
         title: "Ver Todos",
-        href: "/dashboard/interview-types/list",
+        href: "/interview-types/list",
         icon: List,
       },
       {
         title: "Crear Nuevo",
-        href: "/dashboard/interview-types/create",
+        href: "/interview-types/create",
         icon: PlusSquare,
       },
     ],
