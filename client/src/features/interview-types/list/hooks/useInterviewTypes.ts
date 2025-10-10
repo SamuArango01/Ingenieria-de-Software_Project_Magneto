@@ -7,7 +7,7 @@ import {
   getUserInterviewTypes, 
   toggleInterviewTypeActive 
 } from '../../services/interview-type.service';
-import type { FilterType } from './components/InterviewTypeFilters';
+import type { FilterType } from '../../models/interview-type.model';
 
 export function useInterviewTypes() {
   const [filter, setFilter] = useState<FilterType>('all');

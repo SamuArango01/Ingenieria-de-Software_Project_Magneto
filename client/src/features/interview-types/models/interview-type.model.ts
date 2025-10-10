@@ -11,3 +11,8 @@ export interface InterviewType {
   createdAt: string; // Fecha en formato ISO 8601
   updatedAt: string; // Fecha en formato ISO 8601
 }
+
+/**
+ * Define los posibles valores para el filtro de la lista de tipos de entrevista.
+ */
+export type FilterType = 'all' | 'user' | 'public';

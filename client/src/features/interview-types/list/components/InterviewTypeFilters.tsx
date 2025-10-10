@@ -1,8 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-
-export type FilterType = 'all' | 'user' | 'public';
+import type { FilterType } from '../../models/interview-type.model';
 
 interface InterviewTypeFiltersProps {
   activeFilter: FilterType;
