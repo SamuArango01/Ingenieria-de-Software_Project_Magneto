@@ -3,24 +3,10 @@
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { esES } from "@clerk/localizations";
-import { useEffect } from "react";
-import { useAuth } from "@clerk/nextjs";
-import { apiClient } from "@/lib/api/client";
-import { setupRequestInterceptor, setupResponseInterceptor, setupAuthErrorInterceptor } from "@/lib/api/interceptors"; // Import all interceptor setup functions
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AxiosInterceptorProvider } from "@/components/providers/AxiosInterceptorProvider";
 
-function ClerkInterceptor({ children }: { children: React.ReactNode }) {
-  const { getToken, signOut } = useAuth();
-
-  useEffect(() => {
-    // Setup the request interceptor with Clerk's getToken
-    setupRequestInterceptor(apiClient, getToken);
-    // Setup response interceptors with Clerk's signOut
-    setupResponseInterceptor(apiClient, signOut);
-    setupAuthErrorInterceptor(apiClient, signOut);
-  }, [getToken, signOut]);
-
-  return <>{children}</>;
-}
+const queryClient = new QueryClient();
 
 export default function RootLayout({
   children,
@@ -29,11 +15,13 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider localization={esES}>
-      <html lang="en">
-        <body>
-          <ClerkInterceptor>{children}</ClerkInterceptor>
-        </body>
-      </html>
+      <QueryClientProvider client={queryClient}>
+        <html lang="en">
+          <body>
+            <AxiosInterceptorProvider>{children}</AxiosInterceptorProvider>
+          </body>
+        </html>
+      </QueryClientProvider>
     </ClerkProvider>
   );
 }

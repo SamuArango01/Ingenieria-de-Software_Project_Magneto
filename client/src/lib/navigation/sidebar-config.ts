@@ -1,4 +1,13 @@
-
+import {
+  ClipboardType,
+  List,
+  PlusSquare,
+  LayoutDashboard,
+  Users,
+  FileText,
+  BarChart2,
+  Settings,
+} from 'lucide-react';
 
 export interface SidebarSubItem {
   title: string;
@@ -14,32 +23,45 @@ export interface SidebarItem {
 }
 
 export const sidebarConfig: SidebarItem[] = [
-  // es un ejemplo la idea es mudar 
-  // el sidebar info a un lugar externo al componente
-  // {
-  //   title: "Dashboard",
-  //   href: "/dashboard",
-  //   icon: LayoutDashboard,
-  // },
-  // {
-  //   title: "Usuarios",
-  //   icon: Users,
-  //   children: [
-  //     { 
-  //       title: "Lista de Usuarios", 
-  //       href: "/usuarios",
-  //       icon: List
-  //     },
-  //     { 
-  //       title: "Crear Usuario", 
-  //       href: "/usuarios/crear",
-  //       icon: UserPlus
-  //     },
-  //     { 
-  //       title: "Roles y Permisos", 
-  //       href: "/usuarios/roles",
-  //       icon: Shield
-  //     },
-  //   ]
-  // },
+  {
+    title: "Dashboard",
+    href: "/dashboard",
+    icon: LayoutDashboard,
+  },
+  {
+    title: "Entrevistas",
+    href: "/entrevistador",
+    icon: Users,
+  },
+  {
+    title: "Tipos de Entrevista",
+    icon: ClipboardType,
+    children: [
+      {
+        title: "Ver Todos",
+        href: "/interview-types/list",
+        icon: List,
+      },
+      {
+        title: "Crear Nuevo",
+        href: "/interview-types/create",
+        icon: PlusSquare,
+      },
+    ],
+  },
+  {
+    title: "Reportes",
+    href: "/entrevistador/reportes",
+    icon: FileText,
+  },
+  {
+    title: "Análisis",
+    href: "/entrevistador/analisis",
+    icon: BarChart2,
+  },
+  {
+    title: "Configuración",
+    href: "/entrevistador/configuracion",
+    icon: Settings,
+  },
 ];

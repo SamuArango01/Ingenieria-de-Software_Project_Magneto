@@ -55,6 +55,28 @@ export class InterviewTypeController {
         );
     }
 
+    async getInterviewTypeById(req: Request, res: Response): Promise<void> {
+        const { userId } = getAuth(req);
+        if (!userId) {
+            res.status(401).json({ message: 'Unauthorized' });
+            return;
+        }
+
+        const { id } = req.params;
+        const result = await this.interviewTypeService.getInterviewTypeById(userId, Number(id));
+
+        result.match(
+            (interviewType) => res.json(interviewType),
+            (error) => {
+                if (error.type === 'InterviewTypeNotFoundError') {
+                    res.status(404).json({ message: error.message });
+                } else {
+                    res.status(500).json({ message: 'Internal server error' });
+                }
+            }
+        );
+    }
+
     async updateInterviewType(req: Request, res: Response): Promise<void> {
         const { userId } = getAuth(req);
         if (!userId) {
