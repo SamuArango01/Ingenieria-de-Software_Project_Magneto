@@ -40,6 +40,16 @@ export class InterviewTypeService implements IInterviewTypeService {
         return ok(interviewTypes);
     }
 
+    async getInterviewTypeById(userId: string, id: number): Promise<Result<InterviewType, InterviewTypeNotFoundError>> {
+        const interviewType = await this.repository.findByIdForUser(userId, id);
+
+        if (!interviewType) {
+            return err({ type: 'InterviewTypeNotFoundError', message: "Interview type not found or you don't have permission to view it" });
+        }
+
+        return ok(interviewType);
+    }
+
     async updateInterviewType(userId: string, id: number, name: string, description: string): Promise<Result<InterviewType, InterviewTypeNotFoundError | ValidationError>> {
         if (!name) {
             return err({ type: 'ValidationError', message: 'Name is required' });

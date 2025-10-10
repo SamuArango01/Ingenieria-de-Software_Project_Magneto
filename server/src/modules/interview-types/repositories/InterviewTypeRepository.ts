@@ -19,6 +19,13 @@ export class InterviewTypeRepository implements IInterviewTypeRepository {
             .getMany();
     }
 
+    findByIdForUser(userId: string, id: number): Promise<InterviewType | null> {
+        return this.repository.createQueryBuilder("interview_type")
+            .where("interview_type.id = :id", { id })
+            .andWhere("(interview_type.is_public = :isPublic OR interview_type.created_by = :userId)", { isPublic: true, userId })
+            .getOne();
+    }
+
     save(interviewType: InterviewType): Promise<InterviewType> {
         return this.repository.save(interviewType);
     }

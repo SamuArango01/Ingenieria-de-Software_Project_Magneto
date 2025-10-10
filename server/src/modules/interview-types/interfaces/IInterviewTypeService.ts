@@ -11,4 +11,5 @@ export interface IInterviewTypeService {
     listUserInterviewTypes(userId: string): Promise<Result<InterviewType[], never>>;
     updateInterviewType(userId: string, id: number, name: string, description: string): Promise<Result<InterviewType, InterviewTypeNotFoundError | ValidationError>>;
     toggleInterviewTypeActive(userId: string, id: number): Promise<Result<InterviewType, InterviewTypeNotFoundError>>;
+    getInterviewTypeById(userId: string, id: number): Promise<Result<InterviewType, any>>;
 }
