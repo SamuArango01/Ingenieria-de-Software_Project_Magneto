@@ -14,6 +14,7 @@ export class UserConfigurationController {
     const { userId } = getAuth(req);
     if (!userId) {
       // Este caso no debería ocurrir si la ruta está protegida, pero es un buen control
+      res.status(401).json({ message: 'Unauthorized' });
       return;
     }
 
