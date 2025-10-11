@@ -28,7 +28,7 @@ export function InterviewTypeActions({
         <Button 
           variant="outline" 
           size="sm"
-          onClick={() => router.push(`/dashboard/interview-types/edit/${interviewType.id}`)}
+          onClick={() => router.push(`/interview-types/edit/${interviewType.id}`)}
         >
           Editar
         </Button>
