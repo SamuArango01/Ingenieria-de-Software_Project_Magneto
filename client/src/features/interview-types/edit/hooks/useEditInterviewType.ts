@@ -46,7 +46,7 @@ export function useEditInterviewType(id: number) {
       // Invalidar las queries para que los datos se refresquen en toda la app
       queryClient.invalidateQueries({ queryKey: ['interviewTypes'] });
       queryClient.invalidateQueries({ queryKey: ['interviewType', id] });
-      router.push('/dashboard/interview-types/list');
+      router.push('/interview-types/list');
     },
     onError: (error) => {
       console.error('Error al actualizar el tipo de entrevista:', error.message);
