@@ -1,3 +1,8 @@
+// hay demasiada basura en este archivo
+// limpiar
+
+import "dotenv/config";
+import "reflect-metadata";
 import express from "express";
 import cors from "cors";
 import multer from "multer";
@@ -5,23 +10,44 @@ import fs from "fs";
 import { transcribeAudio } from "./helpers/TranscribeAudio";
 import { generateContent } from "./helpers/GenerateContent";
 import nodemailer from "nodemailer";
-import { marked } from "marked";  
+import { marked } from "marked";
+import { AppDataSource } from "@/database/data-source";
+import router from "@/routes";
+import morgan from "morgan";
+import { clerkMiddleware, getAuth } from '@clerk/express';
+import { syncUserMiddleware } from "@/middleware/syncUserMiddleware";
+import { InterviewTypeService } from './src/modules/interview-types/services/InterviewTypeService';
 
 const app = express();
 const PORT = process.env.PORT || 3211;
+const interviewTypeService = new InterviewTypeService();
+
+AppDataSource.initialize()
+    .then(() => {
+        console.log("Data Source has been initialized!");
+        app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
+        });
+    })
+    .catch((err) => {
+        console.error("Error during Data Source initialization:", err);
+    });
 
 app.use(cors());
 app.use(express.json());
+app.use(morgan("dev")); // Add morgan for logging
 
-// Configuración del transporter de nodemailer
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD // Usa App Password de Gmail
-  },
-});
+// Use Clerk's middleware
+app.use(clerkMiddleware());
 
+// sync user with database middleware
+app.use(syncUserMiddleware);
+
+// New routes
+app.use("/api/v1", router);
+
+// migrar todas esas
+// Old routes
 const upload = multer({
   dest: "uploads/",
   limits: {
@@ -37,8 +63,7 @@ app.get("/", (_, res) => {
   res.json({ message: "Funcionaaaa" });
 });
 
-
-app.post("/api/audio", upload.single("audio"), async (req, res) => {
+app.post("/api/v1/audio", upload.single("audio"), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: "No audio file provided" });
@@ -47,20 +72,26 @@ app.post("/api/audio", upload.single("audio"), async (req, res) => {
     // Step 1: Transcribe audio
     const transcriptedText = await transcribeAudio(req.file.path);
 
+    const { interviewTypeId } = req.query;
+    let aiResponsePrompt = `You are an AI interviewer assistant. Based on this candidate's response:\n\n"${transcriptedText}"\n\nProvide a brief, professional follow-up question or comment in Spanish that would be appropriate in a job interview context. Keep it conversational and engaging.`;
+
+    if (interviewTypeId) {
+      const { userId } = getAuth(req);
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+      const interviewTypeResult = await interviewTypeService.getInterviewTypeById(userId, Number(interviewTypeId));
+      if (interviewTypeResult.isOk() && interviewTypeResult.value.description) {
+        aiResponsePrompt = `${interviewTypeResult.value.description}\n\nBased on this candidate's response:\n\n"${transcriptedText}"\n\nProvide a brief, professional follow-up question or comment in Spanish that would be appropriate in a job interview context. Keep it conversational and engaging.`;
+      }
+    }
+
     // Step 2: Translate to English using Gemini
-    const translatePrompt = `Translate the following Spanish text to English. Only return the translation, no additional text:
-    
-    "${transcriptedText}"`;
+    const translatePrompt = `Translate the following Spanish text to English. Only return the translation, no additional text:\n    \n    "${transcriptedText}"`;
     
     const translatedText = await generateContent(translatePrompt);
 
     // Step 3: Generate AI response using Gemini
-    const aiResponsePrompt = `You are an AI interviewer assistant. Based on this candidate's response:
-    
-    "${transcriptedText}"
-    
-    Provide a brief, professional follow-up question or comment in Spanish that would be appropriate in a job interview context. Keep it conversational and engaging.`;
-    
     const aiResponse = await generateContent(aiResponsePrompt);
 
     // Clean up the uploaded file
@@ -88,8 +119,7 @@ app.post("/api/audio", upload.single("audio"), async (req, res) => {
   }
 });
 
-
-app.post("/api/summary", async (req, res) => {
+app.post("/api/v1/summary", async (req, res) => {
   try {
     const { interviewHistory } = req.body;
 
@@ -131,6 +161,13 @@ ${conversation}
   }
 });
 
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASSWORD // Usa App Password de Gmail
+  },
+});
 
 app.post("/api/send-email", async (req, res) => {
   try {
@@ -247,6 +284,3 @@ app.post("/api/send-email", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
