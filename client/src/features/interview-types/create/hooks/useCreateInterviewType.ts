@@ -22,7 +22,7 @@ export function useCreateInterviewType() {
     mutationFn: createInterviewType,
     onSuccess: () => {
       console.log('Tipo de entrevista creado con éxito');
-      router.push('/dashboard/interview-types/list');
+      router.push('/interview-types/list');
     },
     onError: (error) => {
       console.error('Error al crear el tipo de entrevista:', error.message);
