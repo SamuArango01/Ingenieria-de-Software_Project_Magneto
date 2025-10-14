@@ -25,10 +25,4 @@ export class InterviewEvaluation {
 
     @CreateDateColumn({ name: "created_at" })
     createdAt: Date;
-
-    constructor(data?: Partial<InterviewEvaluation>) {
-        if (data) {
-            Object.assign(this, data);
-        }
-    }
 }
