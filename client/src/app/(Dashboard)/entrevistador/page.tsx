@@ -37,7 +37,7 @@ export default function EntrevistadorPage() {
   const { 
     startStarInterview, 
     sendAudio, 
-    generateSummary, 
+    generateAndSaveEvaluation, // Usamos la nueva función
     sendEmail, 
     evaluateLevelAdvancement: evaluateLevelAPI,
     userEmail, 
@@ -72,6 +72,7 @@ export default function EntrevistadorPage() {
   } = state;
 
   const [isStartingInterview, setIsStartingInterview] = useState(false);
+  const [interviewId, setInterviewId] = useState<number | null>(null); // 1. Añadimos estado para el ID
   const audioRecorderRef = useRef<AudioRecorderHandle>(null);
 
 
@@ -190,7 +191,7 @@ export default function EntrevistadorPage() {
       const result = await startStarInterview(selectedInterviewTypeId, currentDifficulty);
       
       if (result.success && result.data) {
-        
+        setInterviewId(result.data.interviewId); // 2. Guardamos el ID de la entrevista
         startInterview(result.data.initialMessage);
         
         const difficultyConfig = getCurrentDifficultyConfig();
@@ -315,7 +316,7 @@ export default function EntrevistadorPage() {
 
 
   const handleFinalEvaluation = async () => {
-    if (interviewHistory.length === 0) return;
+    if (interviewHistory.length === 0 || !interviewId) return; // 3. Añadimos guarda por si no hay ID
 
     clearFeedback();
     
@@ -327,33 +328,19 @@ export default function EntrevistadorPage() {
     try {
       console.log("🎯 Iniciando evaluación final del nivel:", currentDifficulty);
 
-      const evaluationResult = await evaluateLevelAPI(
-        interviewHistory, 
-        candidateMetricsHistory, 
-        currentDifficulty
-      );
+      // Primero, generamos y guardamos la evaluación
+      const evaluationResult = await generateAndSaveEvaluation(interviewHistory, interviewId);
 
-      if (evaluationResult.success) {
-        const canAdvance = evaluationResult.canAdvance;
-        const finalScore = evaluationResult.score;
-        const nextLevel = getNextLevel();
-        
-        console.log("📊 Resultado evaluación final:", {
-          canAdvance,
-          score: finalScore,
-          currentLevel: currentDifficulty,
-          nextLevel,
-          feedback: evaluationResult.feedback
+      if (evaluationResult.success && evaluationResult.data) {
+        updateState({ 
+          summary: evaluationResult.summary
         });
 
-     
-        const summaryResult = await generateSummary(interviewHistory, candidateMetricsHistory, currentDifficulty);
-        
-        if (summaryResult.success) {
-          updateState({ 
-            summary: summaryResult.data?.summary || summaryResult.summary
-          });
-        }
+        // Luego, usamos los datos de la evaluación guardada para el resto de la lógica
+        const finalScore = evaluationResult.data.rating;
+        // Asumimos que la lógica de avance se puede determinar con la puntuación
+        const difficultyConfig = getCurrentDifficultyConfig();
+        const canAdvance = finalScore ? finalScore >= (difficultyConfig.requiredScore / 10) * 10 : false; // Ajustar escala si es necesario
 
         updateState({
           canAdvanceToNextLevel: canAdvance,
@@ -361,12 +348,11 @@ export default function EntrevistadorPage() {
           isGeneratingFeedback: false,
           isEvaluatingLevel: false, 
           error: canAdvance ? 
-            `🎉 ¡Excelente! Puntuación: ${finalScore}/100 - Puedes avanzar a ${evaluationResult.recommendedLevel}` :
-            `📊 Puntuación: ${finalScore}/100 - ${evaluationResult.feedback}`
+            `🎉 ¡Excelente! Puntuación: ${finalScore}/10 - Puedes avanzar` :
+            `📊 Puntuación: ${finalScore}/10 - Sigue practicando en este nivel.`
         });
-
       } else {
-        throw new Error(evaluationResult.error || "Error en evaluación del nivel");
+        throw new Error(evaluationResult.error || "Error en la evaluación final");
       }
     } catch (err) {
       console.error("❌ Error en evaluación final:", err);
@@ -385,12 +371,11 @@ export default function EntrevistadorPage() {
   };
 
   const handleGenerateCompleteFeedback = async () => {
-    if (interviewHistory.length === 0) {
-      updateState({ error: "No hay historial de entrevista para generar feedback" });
+    if (interviewHistory.length === 0 || !interviewId) {
+      updateState({ error: "No hay entrevista activa para generar feedback" });
       return;
     }
 
-   
     clearFeedback();
     
     updateState({ 
@@ -400,15 +385,15 @@ export default function EntrevistadorPage() {
     
     try {
       console.log("📊 Generando análisis completo...");
-      const summaryResult = await generateSummary(interviewHistory, candidateMetricsHistory, currentDifficulty);
+      const result = await generateAndSaveEvaluation(interviewHistory, interviewId);
 
-      if (summaryResult.success) {
+      if (result.success) {
         updateState({ 
-          summary: summaryResult.data?.summary || summaryResult.summary,
-          error: "✅ Análisis completo generado exitosamente"
+          summary: result.summary,
+          error: "✅ Análisis completo generado y guardado exitosamente"
         });
       } else {
-        throw new Error(summaryResult.error || "Error generando el análisis");
+        throw new Error(result.error || "Error generando el análisis");
       }
     } catch (err) {
       console.error(" Error generando feedback:", err);
