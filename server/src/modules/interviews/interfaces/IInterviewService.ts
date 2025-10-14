@@ -21,12 +21,6 @@ export interface IInterviewService {
         canAdvanceToNextLevel?: boolean; 
     }, ValidationError>>;
 
-    generateSummary(
-        interviewHistory: Array<{ user: string; ai: string }>,
-        candidateMetricsHistory?: any[],
-        difficultyLevel?: string 
-    ): Promise<Result<{ summary: string; success: boolean }, ValidationError>>;
-
     sendInterviewEmail(
         candidateEmail: string,
         candidateName: string,
@@ -38,11 +32,12 @@ export interface IInterviewService {
 
     startStarInterview(
         candidateName: string,
-        userId?: string,
+        userId: string,
         interviewTypeId?: number,
         difficultyLevel?: string 
     ): Promise<Result<{ 
         initialMessage: string; 
+        interviewId: number;
         success: boolean 
     }, ValidationError>>;
 

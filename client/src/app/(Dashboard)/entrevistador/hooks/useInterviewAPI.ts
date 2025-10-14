@@ -8,6 +8,7 @@ export interface StartStarInterviewResponse {
     initialMessage: string; 
     candidateName: string;
     timestamp: string;
+    interviewId: number; // Añadimos el ID de la entrevista
   };
   error?: string;
 }
@@ -85,7 +86,7 @@ export const useInterviewAPI = () => {
       
       return {
         success: true,
-        data: response.data.data 
+        data: { ...response.data.data, interviewId: response.data.interviewId } // Incluimos el ID
       };
     } catch (error: any) {
       return {
@@ -149,33 +150,31 @@ export const useInterviewAPI = () => {
     }
   };
 
-  const generateSummary = async (
+  const generateAndSaveEvaluation = async (
     interviewHistory: any[], 
-    candidateMetricsHistory: any[],
-    difficultyLevel: string
+    interviewId: number
   ): Promise<GenerateSummaryResponse> => {
     try {
-      console.log("Enviando para análisis completo:", {
+      console.log("Enviando para generar y guardar evaluación:", {
         interviewHistoryLength: interviewHistory.length,
-        candidateMetricsHistoryLength: candidateMetricsHistory?.length || 0,
-        difficultyLevel
+        interviewId
       });
 
-      const response = await apiClient.post("v1/interviews/summary", {
+      const response = await apiClient.post("/interview-evaluations", {
         interviewHistory,
-        candidateMetricsHistory,
-        difficultyLevel
+        interviewId
       });
 
+      // La respuesta ahora es la entidad InterviewEvaluation completa
       return {
         success: true,
-        summary: response.data.summary,
-        data: response.data
+        summary: response.data.feedback, // Extraemos el texto del feedback
+        data: response.data // Devolvemos la entidad completa por si se necesita
       };
     } catch (error: any) {
       return {
         success: false,
-        error: error.response?.data?.message || error.message || 'Error de conexión al generar resumen'
+        error: error.response?.data?.message || error.message || 'Error de conexión al generar la evaluación'
       };
     }
   };
@@ -241,38 +240,11 @@ export const useInterviewAPI = () => {
     }
   };
   
-  const saveFeedback = async (feedbackData: FeedbackData): Promise<SaveFeedbackResponse> => {
-    try {
-  
-      const response = await apiClient.post("v1/interview-evaluations", {
-        interviewId: feedbackData.interviewId,
-        areasToImprove: feedbackData.areasToImprove,
-        strengths: feedbackData.strengths || [],
-        aiFeedback: feedbackData.aiFeedback,
-        overallScore: feedbackData.overallScore,
-        difficultyLevel: feedbackData.difficultyLevel
-      });
-
-
-      
-      return {
-        success: true,
-        evaluationId: response.data.evaluationId
-      };
-    } catch (error: any) {
-      return {
-        success: false,
-        error: error.response?.data?.message || error.message || 'Error de conexión al guardar feedback'
-      };
-    }
-  };
-
   return {
     startStarInterview,
     sendAudio,
-    generateSummary,
+    generateAndSaveEvaluation,
     sendEmail,
-    saveFeedback, 
     evaluateLevelAdvancement,
     userEmail: user?.primaryEmailAddress?.emailAddress,
     userName: getUserName()

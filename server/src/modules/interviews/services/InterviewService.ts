@@ -6,6 +6,8 @@ import { generateContent } from '../../../../helpers/GenerateContent';
 import { InterviewTypeService } from '@/modules/interview-types/services/InterviewTypeService';
 import nodemailer from 'nodemailer';
 import { marked } from 'marked';
+import { IInterviewRepository } from '../interfaces/IInterviewRepository';
+import { InterviewRepository } from '../repositories/InterviewRepository';
 
 type ValidationError = { type: 'ValidationError'; message: string };
 type EmailError = { type: 'EmailError'; message: string };
@@ -20,6 +22,7 @@ interface DifficultyConfig {
 
 export class InterviewService implements IInterviewService {
     private interviewTypeService: InterviewTypeService;
+    private interviewRepository: IInterviewRepository; // Repositorio de entrevistas
     private transporter;
 
     private readonly DIFFICULTY_LEVELS: { [key: string]: DifficultyConfig } = {
@@ -48,6 +51,7 @@ export class InterviewService implements IInterviewService {
 
     constructor() {
         this.interviewTypeService = new InterviewTypeService();
+        this.interviewRepository = new InterviewRepository(); // Instanciar el repositorio
         this.transporter = nodemailer.createTransport({
             service: "gmail",
             auth: {
@@ -59,11 +63,12 @@ export class InterviewService implements IInterviewService {
 
 async startStarInterview(
     candidateName: string,
-    userId?: string,
+    userId: string,
     interviewTypeId?: number,
     difficultyLevel: string = 'junior'
 ): Promise<Result<{ 
     initialMessage: string; 
+    interviewId: number; // Devolvemos el ID
     success: boolean 
 }, ValidationError>> {
     try {
@@ -74,12 +79,17 @@ async startStarInterview(
             });
         }
 
-        console.log("🔍 BACKEND - Datos recibidos:", { 
-            candidateName, 
-            interviewTypeId, 
-            userId, 
-            difficultyLevel 
+        // 1. Crear y guardar la entidad Interview
+        const newInterview = this.interviewRepository.create({
+            userId,
+            candidateName,
+            status: 'started',
+            difficultyLevel,
+            interviewTypeId
         });
+        const savedInterview = await this.interviewRepository.save(newInterview);
+
+        console.log(`📝 Entrevista #${savedInterview.id} guardada para el usuario ${userId}`);
 
         const levelConfig = this.DIFFICULTY_LEVELS[difficultyLevel] || this.DIFFICULTY_LEVELS.junior;
         
@@ -121,17 +131,11 @@ EN ESPAÑOL. Máximo 120 palabras.`;
         }
 
         const aiResponse = await generateContent(prompt);
-        console.log("🤖 Respuesta IA completa:", aiResponse);
-
         const initialMessage = aiResponse.trim();
-
-        console.log("📝 Mensaje inicial generado:", {
-            length: initialMessage.length,
-            preview: initialMessage.substring(0, 150) + '...'
-        });
 
         return ok({
             initialMessage,
+            interviewId: savedInterview.id, // Incluimos el ID en la respuesta
             success: true
         });
 
@@ -504,78 +508,7 @@ private calculateOverallScore(candidateMetrics: any): number {
     return Math.min(100, Math.max(0, finalScore));
 }
 
-    async generateSummary(
-        interviewHistory: Array<{ user: string; ai: string }>,
-        candidateMetricsHistory?: any[],
-        difficultyLevel: string = 'junior'
-    ): Promise<Result<{ summary: string; success: boolean }, ValidationError>> {
-        try {
-            if (!interviewHistory || interviewHistory.length === 0) {
-                return err({ type: 'ValidationError', message: "No interview history provided" });
-            }
-
-            const levelConfig = this.DIFFICULTY_LEVELS[difficultyLevel] || this.DIFFICULTY_LEVELS.junior;
-
-            const conversation = interviewHistory
-                .map(
-                    (turn: { user: string; ai: string }, i: number) =>
-                        `Respuesta ${i + 1} del candidato: ${turn.user}\nPregunta del entrevistador: ${turn.ai}`
-                )
-                .join("\n\n");
-
-            let metricsContext = "";
-            if (candidateMetricsHistory && candidateMetricsHistory.length > 0) {
-                console.log("📊 Calculando métricas promedio del candidato...");
-                const averageMetrics = this.calculateAverageCandidateMetrics(candidateMetricsHistory);
-                if (averageMetrics && this.hasValidCandidateMetrics(averageMetrics)) {
-                    metricsContext = this.buildUnifiedMetricsContext(averageMetrics);
-                }
-            }
-
-            const summaryPrompt = `
-Eres un entrevistador profesional evaluando a un candidato de nivel ${levelConfig.name}.
-
-CONTEXTO DEL NIVEL: ${levelConfig.description}
-
-Genera un feedback INTEGRADO para el candidato que combine:
-- El contenido de sus respuestas (adecuación al nivel ${levelConfig.name})
-- Su desempeño vocal y comunicación
-- Análisis de fortalezas y áreas de mejora específicas para el nivel
-- Evaluación de si las respuestas son apropiadas para el nivel ${levelConfig.name}
-
-**INSTRUCCIONES:**
-- Máximo 400 palabras
-- Lenguaje directo y constructivo
-- Considera las expectativas del nivel ${levelConfig.name}
-- Integra naturalmente métricas vocales con contenido
-- Enfocado en desarrollo profesional para avanzar al siguiente nivel
-
-**DATOS DEL CANDIDATO:**
-${metricsContext}
-
-**NIVEL EVALUADO:** ${levelConfig.name}
-
-**HISTORIAL DE LA ENTREVISTA:**
-${conversation}
-
-**IMPORTANTE:** Comienza directamente con el análisis integrado, considerando el nivel ${levelConfig.name}.
-            `;
-
-            const summary = await generateContent(summaryPrompt);
-
-            return ok({ 
-                summary,
-                success: true 
-            });
-
-        } catch (error) {
-            return err({ 
-                type: 'ValidationError', 
-                message: error instanceof Error ? error.message : 'Error generating summary' 
-            });
-        }
-    }
-
+    private getMostFrequentItems(items: string[]): string[] {
 
 
 private buildUnifiedMetricsContext(averageMetrics: any): string {

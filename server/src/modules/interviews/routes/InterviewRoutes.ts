@@ -25,11 +25,6 @@ router.post('/audio', upload.single("audio"), (req, res) =>
     interviewController.processAudio(req, res)
 );
 
-//  Ruta para generar summary
-router.post('/summary', (req, res) => 
-    interviewController.generateSummary(req, res)
-);
-
 //  Ruta para enviar email
 router.post('/email', (req, res) => 
     interviewController.sendEmail(req, res)

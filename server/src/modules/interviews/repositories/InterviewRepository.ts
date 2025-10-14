@@ -1,33 +1,20 @@
-// src/modules/interviews/repositories/InterviewRepository.ts
-import { Repository } from 'typeorm';
-import { AppDataSource } from '@/database/data-source';
-import { Interview } from '../entities/Interview';
-import type { IInterviewRepository } from '../interfaces/IInterviewRepository';
+import { AppDataSource } from "@/database/data-source";
+import { Interview } from "@/modules/interviews/entities/Interview";
+import type { IInterviewRepository } from "@/modules/interviews/interfaces/IInterviewRepository";
+import { Repository } from "typeorm";
 
 export class InterviewRepository implements IInterviewRepository {
-  private repository: Repository<Interview>;
+    private repository: Repository<Interview>;
 
-  constructor() {
-    this.repository = AppDataSource.getRepository(Interview);
-  }
+    constructor() {
+        this.repository = AppDataSource.getRepository(Interview);
+    }
 
-  async findById(id: number): Promise<Interview | null> {
-    return await this.repository.findOne({ 
-      where: { id },
-      relations: ['user', 'interviewType']
-    });
-  }
+    public create(data: Partial<Interview>): Interview {
+        return this.repository.create(data);
+    }
 
-  async create(interview: Partial<Interview>): Promise<Interview> {
-    const created = this.repository.create(interview);
-    return await this.repository.save(created);
-  }
-
-  async update(id: number, interview: Partial<Interview>): Promise<Interview | null> {
-    await this.repository.update(id, interview);
-    return await this.repository.findOne({ 
-      where: { id },
-      relations: ['user', 'interviewType']
-    });
-  }
+    public async save(interview: Interview): Promise<Interview> {
+        return this.repository.save(interview);
+    }
 }
