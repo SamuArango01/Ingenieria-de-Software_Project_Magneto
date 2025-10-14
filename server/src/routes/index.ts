@@ -4,6 +4,7 @@ import interviewTypeRoutes from '@/modules/interview-types/routes/InterviewTypeR
 import workFieldRoutes from '@/modules/work-fields/routes/WorkFieldRoutes';
 import userConfigurationRoutes from '@/modules/user-configurations/routes/UserConfigurationRoutes';
 import interviewRoutes from '@/modules/interviews/routes/InterviewRoutes'; // ← NUEVA IMPORTACIÓN
+import interviewEvaluationRoutes from '@/modules/interview-evaluations/routes/InterviewEvaluationRoutes';
 
 const router = Router();
 
@@ -11,5 +12,6 @@ router.use('/interview-types', interviewTypeRoutes);
 router.use('/work-fields', workFieldRoutes);
 router.use('/user-configurations', userConfigurationRoutes);
 router.use('/interviews', interviewRoutes); // ← NUEVA RUTA
+router.use('/interview-evaluations', interviewEvaluationRoutes);
 
 export default router;
