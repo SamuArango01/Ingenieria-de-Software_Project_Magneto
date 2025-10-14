@@ -1,66 +1,32 @@
-// src/modules/interview-evaluations/services/InterviewEvaluationService.ts
-import { ok, err, Result } from 'neverthrow';
-import { InterviewEvaluation } from '../entities/InterviewEvaluation';
-import type { 
-  IInterviewEvaluationService,
-  CreateEvaluationDto,
-  EvaluationNotFoundError,
-  InterviewNotFoundError
-} from '../interfaces/IInterviewEvaluationService';
-import type { IInterviewEvaluationRepository } from '../interfaces/IInterviewEvaluationRepository';
-import type { IInterviewRepository } from '@/modules/interviews/interfaces/IInterviewRepository';
+import { ok, err, Result, fromPromise } from "neverthrow"; // Importar fromPromise
+import type { IInterviewEvaluationRepository } from "@/modules/interview-evaluations/interfaces/IInterviewEvaluationRepository";
+import { InterviewEvaluationRepository } from "@/modules/interview-evaluations/repositories/InterviewEvaluationRepository";
+import type { IInterviewEvaluationService, CreateEvaluationError } from "@/modules/interview-evaluations/interfaces/IInterviewEvaluationService";
+import { InterviewEvaluation } from "@/modules/interview-evaluations/entities/InterviewEvaluation";
 
 export class InterviewEvaluationService implements IInterviewEvaluationService {
-  constructor(
-    private evaluationRepository: IInterviewEvaluationRepository,
-    private interviewRepository: IInterviewRepository
-  ) {}
+    private evaluationRepository: IInterviewEvaluationRepository;
 
-  async createEvaluation(dto: CreateEvaluationDto): Promise<Result<InterviewEvaluation, InterviewNotFoundError>> {
-    // Verificar que la entrevista existe
-    const interview = await this.interviewRepository.findById(dto.interviewId);
-    if (!interview) {
-      return err({
-        type: 'InterviewNotFoundError',
-        message: `Interview with ID ${dto.interviewId} not found`
-      });
+    constructor(evaluationRepository: IInterviewEvaluationRepository = new InterviewEvaluationRepository()) {
+        this.evaluationRepository = evaluationRepository;
     }
 
-    // Crear la evaluación usando el constructor
-    const evaluation = new InterviewEvaluation({
-      interviewId: dto.interviewId,
-      areasToImprove: dto.areasToImprove,
-      strengths: dto.strengths || null, // ✅ Usar null en lugar de undefined
-      aiFeedback: dto.aiFeedback || null // ✅ Usar null en lugar de undefined
-    });
+    async createEvaluation(data: { feedback: string; interviewId: number; rating?: number }): Promise<Result<InterviewEvaluation, CreateEvaluationError>> {
+        // 1. Validación de la lógica de negocio
+        if (!data.feedback) {
+            return err({ type: 'ValidationError', message: 'El feedback no puede estar vacío.' });
+        }
+        if (!data.interviewId) {
+            return err({ type: 'ValidationError', message: 'Se requiere el ID de la entrevista.' });
+        }
 
-    const createdEvaluation = await this.evaluationRepository.create(evaluation);
-    return ok(createdEvaluation);
-  }
+        // 2. Creación de la entidad en memoria
+        const evaluationData = this.evaluationRepository.create(data);
 
-  async getEvaluationByInterviewId(interviewId: number): Promise<Result<InterviewEvaluation, EvaluationNotFoundError>> {
-    const evaluation = await this.evaluationRepository.findByInterviewId(interviewId);
-    
-    if (!evaluation) {
-      return err({
-        type: 'EvaluationNotFoundError',
-        message: `Evaluation for interview ID ${interviewId} not found`
-      });
+        // 3. Uso de fromPromise para manejar el guardado
+        return fromPromise( 
+            this.evaluationRepository.save(evaluationData),
+            (error) => ({ type: 'DatabaseError', cause: error as Error })
+        );
     }
-
-    return ok(evaluation);
-  }
-
-  async updateEvaluation(id: number, dto: Partial<CreateEvaluationDto>): Promise<Result<InterviewEvaluation, EvaluationNotFoundError>> {
-    const updatedEvaluation = await this.evaluationRepository.update(id, dto);
-    
-    if (!updatedEvaluation) {
-      return err({
-        type: 'EvaluationNotFoundError',
-        message: `Evaluation with ID ${id} not found`
-      });
-    }
-
-    return ok(updatedEvaluation);
-  }
 }
