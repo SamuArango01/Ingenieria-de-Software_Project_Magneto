@@ -1,536 +1,796 @@
+// src/app/(Dashboard)/entrevistador/page.tsx
 "use client";
 
-import { MicrophoneIcon, ArrowPathIcon } from "@heroicons/react/24/solid";
-import { useState, useRef } from "react";
-import { useUser } from "@clerk/nextjs";
-import ReactMarkdown from 'react-markdown';
-import { useQuery } from '@tanstack/react-query';
-import { getAvailableInterviewTypes } from '@/features/interview-types/services/interview-type.service';
-import apiClient from '@/lib/api/client';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useInterview } from './hooks/useInterview';
+import { useInterviewAPI } from './hooks/useInterviewAPI';
+import { InterviewTypeSelector } from './components/InterviewTypeSelector/InterviewTypeSelector';
+import { AudioRecorder, AudioRecorderHandle } from './components/AudioRecorder/AudioRecorder';
+import { InterviewHistory } from './components/InterviewHistory/InterviewHistory';
+import { SummarySection } from './components/SummarySection/SummarySection';
+import { ControlButtons } from './components/ControlButtons/ControlButtons';
 
 export default function EntrevistadorPage() {
-  const [isRecording, setIsRecording] = useState(false);
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
-  const [error, setError] = useState<string>("");
-  const [transcribedText, setTranscribedText] = useState<string>("");
-  const [aiResponse, setAiResponse] = useState<string>("");
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
-  const [summary, setSummary] = useState<string>("");
-  const [interviewHistory, setInterviewHistory] = useState<
-    { user: string; ai: string }[]
-  >([]);
-  const [isInterviewFinished, setIsInterviewFinished] = useState(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
-  const { user } = useUser();
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [isSendingEmail, setIsSendingEmail] = useState(false);
-  const [selectedInterviewTypeId, setSelectedInterviewTypeId] = useState<string | null>("generic");
-
-  const { data: interviewTypes, isLoading: isLoadingInterviewTypes } = useQuery({
-    queryKey: ['availableInterviewTypes'],
-    queryFn: () => getAvailableInterviewTypes(),
-  });
- 
-  const restartInterview = () => {
-    
-    if (isRecording && mediaRecorderRef.current) {
-      mediaRecorderRef.current.stop();
-    }
-    
-    setIsRecording(false);
-    setHasPermission(null);
-    setError("");
-    setTranscribedText("");
-    setAiResponse("");
-    setIsProcessing(false);
-    setIsGeneratingSummary(false);
-    setSummary("");
-    setInterviewHistory([]);
-    setIsInterviewFinished(false);
-    chunksRef.current = [];
-    mediaRecorderRef.current = null;
-    setShowConfirm(false);
-    setLoading(false);
-    setIsSendingEmail(false);
-  };
-
-  const requestMicrophonePermission = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      setHasPermission(true);
-      setError("");
-      return stream;
-    } catch (err) {
-      setHasPermission(false);
-      setError("Permiso de micrófono denegado. Por favor, permite el acceso al micrófono.");
-      console.error("Error accessing microphone:", err);
-      return null;
-    }
-  };
-
-  const startRecording = async () => {
-    if (isInterviewFinished) {
-      setError("La entrevista ya fue finalizada.");
-      return;
-    }
-
-    setError("");
-    const stream = await requestMicrophonePermission();
-    if (!stream) return;
-
-    try {
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-      chunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          chunksRef.current.push(event.data);
-        }
-      };
-
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(chunksRef.current, { type: "audio/webm" });
-        await sendAudioToBackend(audioBlob);
-
-        // Stop all tracks to release microphone
-        stream.getTracks().forEach((track) => track.stop());
-      };
-
-      mediaRecorder.start(); 
-      setIsRecording(true);
-    } catch (err) {
-      setError("Error al iniciar la grabación");
-      console.error("Error starting recording:", err);
-    }
-  };
-
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-    }
-  };
-
-const sendAudioToBackend = async (audioBlob: Blob) => {
-  setIsProcessing(true);
-  setError("");
+  const { 
+    state, 
+    updateState, 
+    restartInterview,
+    restartSameLevel, 
+    startInterview, 
+    startTimer, 
+    stopTimer, 
+    updateTimeLeft, 
+    resetTimer,
+    goToNextQuestion,
+    isLastQuestion,
+    startTotalTimer,
+    stopTotalTimer,
+    updateTotalTimeLeft,
+    advanceToNextLevel,
+    evaluateLevelAdvancement, 
+    finishInterviewForEvaluation,
+    getCurrentDifficultyConfig,
+    getNextLevel,
+    clearFeedback 
+  } = useInterview();
   
-  try {
-    const formData = new FormData();
-    formData.append("audio", audioBlob, "recording.webm");
+  const { 
+    startStarInterview, 
+    sendAudio, 
+    generateSummary, 
+    sendEmail, 
+    evaluateLevelAdvancement: evaluateLevelAPI,
+    userEmail, 
+    userName 
+  } = useInterviewAPI();
 
-    const url = selectedInterviewTypeId != 'generic'
-      ? `/audio?interviewTypeId=${selectedInterviewTypeId}` 
-      : "/audio";
+  const {
+    isRecording,
+    error,
+    transcribedText,
+    aiResponse,
+    isProcessing,
+    isGeneratingFeedback,
+    summary,
+    interviewHistory,
+    isInterviewFinished,
+    isSendingEmail,
+    selectedInterviewTypeId,
+    candidateMetricsHistory,
+    isInterviewStarted,
+    initialQuestion,
+    timeLeft,
+    isTimerRunning,
+    currentQuestionNumber,
+    totalQuestions,
+    totalTimeLeft,
+    isTotalTimerRunning,
+    currentDifficulty,
+    canAdvanceToNextLevel,
+    overallScore,
+    isEvaluatingLevel,
+  } = state;
 
-    const response = await apiClient.post(url, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
+  const [isStartingInterview, setIsStartingInterview] = useState(false);
+  const audioRecorderRef = useRef<AudioRecorderHandle>(null);
+
+
+  useEffect(() => {
+    console.log(" Estado actualizado:", {
+      currentQuestionNumber,
+      totalQuestions,
+      interviewHistoryLength: interviewHistory.length,
+      isLastQuestion: isLastQuestion(),
+      isInterviewFinished,
+      isInterviewStarted,
+      isEvaluatingLevel,
+      currentDifficulty,
+      overallScore,
+      canAdvanceToNextLevel
     });
+  }, [currentQuestionNumber, totalQuestions, interviewHistory.length, isLastQuestion, isInterviewFinished, isInterviewStarted, isEvaluatingLevel, currentDifficulty, overallScore, canAdvanceToNextLevel]);
 
-    if (response.status !== 200) {
-      throw new Error("No se pudo transcribir el audio. Por favor, intenta hablar más claro o verifica tu micrófono.");
+
+  useEffect(() => {
+    if (isInterviewFinished && isEvaluatingLevel && interviewHistory.length > 0) {
+      handleFinalEvaluation();
+    }
+  }, [isInterviewFinished, isEvaluatingLevel, interviewHistory.length]);
+
+
+  const handleRecordingStop = useCallback(() => {
+    stopTimer();
+    updateState({ isRecording: false });
+  }, [stopTimer, updateState]);
+
+
+  const handleTimeEnd = useCallback(async () => {
+    console.log("⏰ Tiempo agotado para la pregunta - procesando automáticamente");
+    
+    if (isRecording && audioRecorderRef.current) {
+      console.log("🔄 Deteniendo grabación automáticamente...");
+      
+      // Usar el método expuesto por el AudioRecorder para detener y procesar
+      audioRecorderRef.current.stopRecordingAndProcess();
+      
+      updateState({ 
+        error: "⏰ Tiempo agotado - procesando tu respuesta automáticamente...",
+        isProcessing: true 
+      });
+    } else if (isRecording) {
+      // Fallback si no hay referencia
+      handleRecordingStop();
+      updateState({ error: "⏰ Tiempo agotado. Toca el micrófono para enviar tu respuesta." });
+    } else {
+      updateState({ error: "⏰ Tiempo agotado para esta pregunta" });
+    }
+  }, [isRecording, updateState, handleRecordingStop]);
+
+
+  const handleTotalTimeEnd = useCallback(() => {
+    stopTimer();
+    stopTotalTimer();
+    finishInterviewForEvaluation();
+  }, [stopTimer, stopTotalTimer, finishInterviewForEvaluation]);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    
+    if (isTimerRunning && timeLeft > 0) {
+      timer = setInterval(() => {
+        updateTimeLeft(timeLeft - 1);
+      }, 1000);
+    } else if (timeLeft <= 0 && isTimerRunning) {
+      handleTimeEnd();
+      stopTimer();
     }
 
-    const result = response.data;
-    console.log('Audio sent successfully:', result);
-
-    if (result.success) {
-      if (!result.text || result.text.trim() === "") {
-        throw new Error("No se detectó ninguna voz. Por favor, intenta hablar nuevamente.");
+    return () => {
+      if (timer) {
+        clearInterval(timer);
       }
-      
-      setTranscribedText(result.text);
-      setAiResponse(result.aiResponse || "");
-      
-      setInterviewHistory((prev) => [
-        ...prev,
-        { 
-          user: result.text, 
-          ai: result.aiResponse || "No response" 
-        },
-      ]);
-    } else {
-      throw new Error(result.error || "No se pudo procesar el audio correctamente");
-    }
-  } catch (err) {
-    setError(err instanceof Error ? err.message : "Error al procesar audio");
-    console.error("Error sending audio to backend:", err);
-  } finally {
-    setIsProcessing(false);
-  }
-};
+    };
+  }, [isTimerRunning, timeLeft, updateTimeLeft, handleTimeEnd, stopTimer]);
 
-  const handleMicrophoneClick = () => {
-    if (isRecording) {
-      stopRecording();
-    } else {
-      startRecording();
-    }
-  };
 
-  const generateSummary = async () => {
-    if (interviewHistory.length === 0) {
-      setError("No hay historial de entrevista para generar resumen");
+  useEffect(() => {
+    let totalTimer: NodeJS.Timeout;
+    
+    if (isTotalTimerRunning && totalTimeLeft > 0) {
+      totalTimer = setInterval(() => {
+        updateTotalTimeLeft(totalTimeLeft - 1);
+      }, 1000);
+    } else if (totalTimeLeft <= 0 && isTotalTimerRunning) {
+      handleTotalTimeEnd();
+    }
+
+    return () => {
+      if (totalTimer) {
+        clearInterval(totalTimer);
+      }
+    };
+  }, [isTotalTimerRunning, totalTimeLeft, updateTotalTimeLeft, handleTotalTimeEnd]);
+
+  const handleStartInterview = async () => {
+    if (!selectedInterviewTypeId) {
+      updateState({ error: "Por favor, selecciona un tipo de entrevista" });
       return;
     }
 
-    setIsGeneratingSummary(true);
-    setError("");
-    
+    setIsStartingInterview(true);
+    updateState({ error: "" });
+
     try {
-      const response = await fetch("http://localhost:3211/api/summary", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json" 
-        },
-        body: JSON.stringify({ interviewHistory }),
+      console.log("🚀 Iniciando entrevista con:", {
+        selectedInterviewTypeId,
+        currentDifficulty,
+        userName
       });
 
-      if (!response.ok) {
-        throw new Error(`Error del servidor: ${response.status}`);
-      }
-
-      const result = await response.json();
+      const result = await startStarInterview(selectedInterviewTypeId, currentDifficulty);
       
-      if (result.success) {
-        setSummary(result.summary);
+      if (result.success && result.data) {
+        
+        startInterview(result.data.initialMessage);
+        
+        const difficultyConfig = getCurrentDifficultyConfig();
+        resetTimer(difficultyConfig.timePerQuestion);
+        startTotalTimer();
+        
+        console.log("👤 Entrevista para:", userName, "Nivel:", currentDifficulty);
+        console.log("📊 Configuración:", {
+          totalQuestions: difficultyConfig.totalQuestions,
+          timePerQuestion: difficultyConfig.timePerQuestion,
+          totalTime: difficultyConfig.totalTime
+        });
       } else {
-        throw new Error(result.error || "Error generando resumen");
+        throw new Error(result.error || "Error al iniciar la entrevista");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al conectar con el servidor");
-      console.error("Error generating summary:", err);
+      console.error(" Error al iniciar entrevista:", err);
+      updateState({ 
+        error: err instanceof Error ? err.message : "Error al conectar con el servidor" 
+      });
     } finally {
-      setIsGeneratingSummary(false);
+      setIsStartingInterview(false);
     }
   };
 
-  const finishInterview = () => {
-    if (isRecording) {
-      stopRecording();
-    }
-    setIsInterviewFinished(true);
-    setShowConfirm(false);
-  };
-
-  const handleConfirm = async () => {
-    setLoading(true);
-    finishInterview();
-    setLoading(false);
-  };
-
-  const sendEmailToCandidate = async () => {
-    if (!summary) {
-      setError("Primero genera el resumen antes de enviar el email");
+  const handleRecordingStart = useCallback(() => {
+    if (!isInterviewStarted) {
+      updateState({ error: "Primero debes iniciar la entrevista" });
       return;
     }
 
-    if (!user?.primaryEmailAddress) {
-      setError("No se pudo obtener tu email");
+    if (isInterviewFinished) {
+      updateState({ error: "La entrevista ya ha finalizado" });
       return;
     }
 
-    setIsSendingEmail(true);
-    setError("");
+    const isActuallyLastQuestion = isLastQuestion() && interviewHistory.length >= totalQuestions - 1;
+    
+    if (isActuallyLastQuestion) {
+      updateState({ error: "Esta es la última pregunta de la entrevista" });
+      return;
+    }
+    
+    if (!isTimerRunning) {
+      startTimer();
+    }
+    
+    updateState({ isRecording: true, error: "" });
+  }, [isInterviewStarted, isInterviewFinished, isLastQuestion, interviewHistory.length, totalQuestions, isTimerRunning, startTimer, updateState]);
+
+  const handleAudioProcessed = async (audioBlob: Blob) => {
+    console.log("🎵 Procesando audio, pregunta actual:", currentQuestionNumber);
+    
+    if (!isInterviewStarted || isInterviewFinished) {
+      updateState({ error: "La entrevista no está activa" });
+      return;
+    }
+
+    updateState({ isProcessing: true, error: "" });
+
+    try {
+      const result = await sendAudio(audioBlob, selectedInterviewTypeId, currentDifficulty);
+
+      if (result.success && result.aiResponse) {
+        const newCandidateMetrics = result.candidateMetrics ? 
+          [...candidateMetricsHistory, result.candidateMetrics] : 
+          candidateMetricsHistory;
+
+        const newInterviewHistory = [
+          ...interviewHistory,
+          { 
+            user: result.text || "(Audio procesado)", 
+            ai: result.aiResponse 
+          },
+        ];
+
+
+        updateState({
+          transcribedText: result.text || "",
+          aiResponse: result.aiResponse,
+          interviewHistory: newInterviewHistory,
+          candidateMetricsHistory: newCandidateMetrics,
+          isProcessing: false,
+          error: ""
+        });
+
+        setTimeout(() => {
+          const shouldAdvance = !isLastQuestion();
+          const hasCompletedAllQuestions = interviewHistory.length + 1 >= totalQuestions;
+          
+          console.log("⏱️ Decidiendo avance:", {
+            shouldAdvance,
+            hasCompletedAllQuestions,
+            currentQuestion: currentQuestionNumber,
+            totalQuestions: totalQuestions,
+            interviewHistoryLength: interviewHistory.length,
+            isLastQuestion: isLastQuestion()
+          });
+
+          if (shouldAdvance && !hasCompletedAllQuestions) {
+            goToNextQuestion();
+            
+            const difficultyConfig = getCurrentDifficultyConfig();
+            resetTimer(difficultyConfig.timePerQuestion);
+          } else {
+            finishInterviewForEvaluation();
+          }
+        }, 1000);
+
+      } else {
+        throw new Error(result.error || "No se pudo generar respuesta del asistente");
+      }
+
+    } catch (err: any) {
+      console.error(" Error en handleAudioProcessed:", err);
+      updateState({ 
+        error: err.message || "Error al procesar audio",
+        isProcessing: false
+      });
+    }
+  };
+
+
+  const handleFinalEvaluation = async () => {
+    if (interviewHistory.length === 0) return;
+
+    clearFeedback();
+    
+    updateState({ 
+      isGeneratingFeedback: true, 
+      error: "📊 Evaluando tu desempeño completo..." 
+    });
     
     try {
-      const candidateEmail = user.primaryEmailAddress.emailAddress;
-      const candidateName = user.fullName || 'Candidato';
+      console.log("🎯 Iniciando evaluación final del nivel:", currentDifficulty);
 
-      const response = await fetch("http://localhost:3211/api/send-email", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          candidateEmail,
-          candidateName,
-          interviewHistory,
-          summary
-        }),
+      const evaluationResult = await evaluateLevelAPI(
+        interviewHistory, 
+        candidateMetricsHistory, 
+        currentDifficulty
+      );
+
+      if (evaluationResult.success) {
+        const canAdvance = evaluationResult.canAdvance;
+        const finalScore = evaluationResult.score;
+        const nextLevel = getNextLevel();
+        
+        console.log("📊 Resultado evaluación final:", {
+          canAdvance,
+          score: finalScore,
+          currentLevel: currentDifficulty,
+          nextLevel,
+          feedback: evaluationResult.feedback
+        });
+
+     
+        const summaryResult = await generateSummary(interviewHistory, candidateMetricsHistory, currentDifficulty);
+        
+        if (summaryResult.success) {
+          updateState({ 
+            summary: summaryResult.data?.summary || summaryResult.summary
+          });
+        }
+
+        updateState({
+          canAdvanceToNextLevel: canAdvance,
+          overallScore: finalScore,
+          isGeneratingFeedback: false,
+          isEvaluatingLevel: false, 
+          error: canAdvance ? 
+            `🎉 ¡Excelente! Puntuación: ${finalScore}/100 - Puedes avanzar a ${evaluationResult.recommendedLevel}` :
+            `📊 Puntuación: ${finalScore}/100 - ${evaluationResult.feedback}`
+        });
+
+      } else {
+        throw new Error(evaluationResult.error || "Error en evaluación del nivel");
+      }
+    } catch (err) {
+      console.error("❌ Error en evaluación final:", err);
+      updateState({ 
+        error: err instanceof Error ? err.message : "Error evaluando desempeño",
+        isGeneratingFeedback: false,
+        isEvaluatingLevel: false 
       });
+    }
+  };
 
-      const result = await response.json();
+ 
+  const handleAdvanceToNextLevel = () => {
+    console.log("🚀 Avanzando al siguiente nivel...");
+    advanceToNextLevel();
+  };
+
+  const handleGenerateCompleteFeedback = async () => {
+    if (interviewHistory.length === 0) {
+      updateState({ error: "No hay historial de entrevista para generar feedback" });
+      return;
+    }
+
+   
+    clearFeedback();
+    
+    updateState({ 
+      isGeneratingFeedback: true,
+      error: "" 
+    });
+    
+    try {
+      console.log("📊 Generando análisis completo...");
+      const summaryResult = await generateSummary(interviewHistory, candidateMetricsHistory, currentDifficulty);
+
+      if (summaryResult.success) {
+        updateState({ 
+          summary: summaryResult.data?.summary || summaryResult.summary,
+          error: "✅ Análisis completo generado exitosamente"
+        });
+      } else {
+        throw new Error(summaryResult.error || "Error generando el análisis");
+      }
+    } catch (err) {
+      console.error(" Error generando feedback:", err);
+      updateState({ 
+        error: err instanceof Error ? err.message : "Error al conectar con el servidor" 
+      });
+    } finally {
+      updateState({ isGeneratingFeedback: false });
+    }
+  };
+
+  const handleFinishInterview = () => {
+    console.log("🏁 Finalizando entrevista manualmente");
+    finishInterviewForEvaluation();
+  };
+
+  const handleSendEmail = async () => {
+    if (!summary) {
+      updateState({ error: "Primero genera el análisis antes de enviar el email" });
+      return;
+    }
+
+    if (!userEmail) {
+      updateState({ error: "No se pudo obtener tu email" });
+      return;
+    }
+
+    updateState({ isSendingEmail: true, error: "" });
+    
+    try {
+      const result = await sendEmail(userEmail, userName, interviewHistory, summary, currentDifficulty);
 
       if (result.success) {
-        alert(` Correo enviado exitosamente a ${candidateEmail}`);
+        alert(`✅ Correo enviado exitosamente a ${userEmail}`);
       } else {
         throw new Error(result.error || "Error al enviar el correo");
       }
-
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Error de conexión al enviar el correo');
-      console.error('Error enviando email:', error);
+    } catch (err) {
+      updateState({ 
+        error: err instanceof Error ? err.message : 'Error de conexión al enviar el correo' 
+      });
     } finally {
-      setIsSendingEmail(false);
+      updateState({ isSendingEmail: false });
     }
   };
 
+  const handleInterviewTypeChange = (value: string) => {
+    updateState({ selectedInterviewTypeId: value });
+  };
+
+  const handleError = (errorMsg: string) => {
+    updateState({ error: errorMsg });
+  };
+
+  // Función para formatear el tiempo total
+  const formatTotalTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Obtener configuración actual
+  const currentDifficultyConfig = getCurrentDifficultyConfig();
+
   return (
-    <div className="flex items-center justify-center min-h-screen p-8">
-      <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-12 max-w-lg w-full shadow-2xl text-center">
-        <h1 className="text-3xl font-bold text-white mb-8">
-          Iniciar Entrevista
-        </h1>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-black p-4 sm:p-8">
+      <div className="mx-auto max-w-6xl">
+        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-2xl p-6 sm:p-8 shadow-2xl">
 
-        <div className="flex flex-col items-center space-y-6">
-          <div className="w-full max-w-xs">
-            <Select onValueChange={setSelectedInterviewTypeId} value={selectedInterviewTypeId || ""}>
-              <SelectTrigger className="w-full bg-gray-700 text-white border-gray-600">
-                <SelectValue placeholder="Selecciona un tipo de entrevista" />
-              </SelectTrigger>
-              <SelectContent className="bg-gray-800 text-white border-gray-700">
-                {isLoadingInterviewTypes ? (
-                  <SelectItem value="loading" disabled>Cargando tipos...</SelectItem>
-                ) : (
-                  <>
-                    <SelectItem value="generic" >Sin tipo específico (Genérico)</SelectItem>
-                    {interviewTypes?.map((type) => (
-                      <SelectItem key={type.id} value={String(type.id)}>{type.name}</SelectItem>
-                    ))}
-                  </>
-                )}
-              </SelectContent>
-            </Select>
-          </div>
-          <button
-            type="button"
-            onClick={handleMicrophoneClick}
-            disabled={isInterviewFinished || isProcessing}
-            className={`
-              relative p-8 rounded-full transition-all duration-300 transform hover:scale-105
-              ${
-                isRecording
-                  ? "bg-red-500 hover:bg-red-400 animate-pulse"
-                  : "bg-emerald-500 hover:bg-emerald-400"
-              }
-              ${(isInterviewFinished || isProcessing) ? "opacity-50 cursor-not-allowed" : ""}
-              shadow-lg hover:shadow-xl
-            `}
-          >
-            <MicrophoneIcon className="h-16 w-16 text-white" />
-            {isRecording && (
-              <div className="absolute inset-0 rounded-full bg-red-500 animate-ping opacity-75"></div>
-            )}
-          </button>
-
-          <div className="text-center">
-            <p className="text-xl font-semibold text-white mb-2">
-              {isProcessing 
-                ? 'Procesando audio...' 
-                : isRecording 
-                  ? 'Grabando...' 
-                  : isInterviewFinished
-                    ? 'Finalizada'
-                    : 'Hablar'
-              }
-            </p>
-            <p className="text-gray-400 text-sm">
-              {isProcessing
-                ? 'Convirtiendo audio a texto'
-                : isRecording 
-                  ? 'Toca para detener la grabación' 
-                  : isInterviewFinished
-                    ? 'La entrevista ha finalizado'
-                    : 'Toca el micrófono para comenzar'
-              }
-            </p>
-          </div>
-        </div>
-
-        {error && (
-          <div className="mt-8 p-4 bg-red-900/30 border border-red-700 rounded-lg">
-            <p className="text-red-300 text-sm">
-              ⚠️ {error}
-            </p>
-          </div>
-        )}
-
-        {isRecording && !error && (
-          <div className="mt-8 p-4 bg-red-900/30 border border-red-700 rounded-lg">
-            <p className="text-red-300 text-sm">
-              🔴 Entrevista en curso
-            </p>
-          </div>
-        )}
-
-        {hasPermission === false && (
-          <div className="mt-8 p-4 bg-yellow-900/30 border border-yellow-700 rounded-lg">
-            <p className="text-yellow-300 text-sm">
-              🎤 Necesitas permitir el acceso al micrófono para continuar
-            </p>
-          </div>
-        )}
-
-        {isProcessing && (
-          <div className="mt-8 p-4 bg-blue-900/30 border border-blue-700 rounded-lg">
-            <p className="text-blue-300 text-sm flex items-center justify-center">
-              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Procesando audio con Whisper AI...
-            </p>
-          </div>
-        )}
-
-        {(transcribedText || aiResponse) && (
-          <div className="mt-8 space-y-6">
-            {transcribedText && (
-              <div className="p-6 bg-emerald-900/30 border border-emerald-700 rounded-lg">
-                <h3 className="text-emerald-300 font-semibold mb-3 flex items-center">
-                  📝 Tu respuesta:
-                </h3>
-                <p className="text-white text-base leading-relaxed bg-gray-800/50 p-4 rounded-lg">
-                  {transcribedText}
-                </p>
+          {/* Header */}
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-extrabold text-white">Entrevista Inteligente</h1>
+              <p className="text-sm text-gray-400 mt-1">
+                {userName ? `Personalizada para ${userName}` : 'Bienvenido/a'} 
+                {isInterviewStarted && ` - Nivel: ${currentDifficulty.toUpperCase()}`}
+                {isInterviewStarted && ` - Pregunta ${currentQuestionNumber} de ${totalQuestions}`}
+                {overallScore && ` - Puntuación: ${overallScore}/100`}
+              </p>
+            </div>
+            
+            {isInterviewStarted && (
+              <div className="text-right">
+                <div className={`text-2xl sm:text-3xl font-bold ${totalTimeLeft <= 300 ? 'text-red-400 animate-pulse' : 'text-white'}`}>
+                  {formatTotalTime(totalTimeLeft)}
+                </div>
+                <div className="text-xs text-gray-400 mt-1">Tiempo total</div>
               </div>
             )}
+          </div>
 
-            {aiResponse && (
-              <div className="p-6 bg-blue-900/30 border border-blue-700 rounded-lg">
-                <h3 className="text-blue-300 font-semibold mb-3 flex items-center">
-                  🤖 Entrevistador AI:
-                </h3>
-                <div className="text-white text-base leading-relaxed bg-gray-800/50 p-4 rounded-lg prose prose-invert max-w-none">
-                  <ReactMarkdown
-                    components={{
-                      strong: ({children}) => <strong className="font-bold text-blue-100">{children}</strong>,
-                      p: ({children}) => <p className="mb-2 last:mb-0">{children}</p>,
-                      ul: ({children}) => <ul className="list-disc list-inside mb-2 space-y-1">{children}</ul>,
-                      ol: ({children}) => <ol className="list-decimal list-inside mb-2 space-y-1">{children}</ol>,
-                      li: ({children}) => <li className="ml-2">{children}</li>
-                    }}
-                  >
-                    {aiResponse}
-                  </ReactMarkdown>
+          {/* Contenido principal */}
+          <div className="space-y-8">
+            {!isInterviewStarted ? (
+      
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="p-6 bg-gray-900/20 border border-gray-700 rounded-lg">
+                  <h3 className="text-white font-semibold mb-4">Configuración de la entrevista</h3>
+                  <div className="space-y-6">
+                    <div>
+                      <label className="block text-sm text-gray-300 mb-2">Tipo de entrevista</label>
+                      <InterviewTypeSelector 
+                        selectedInterviewTypeId={selectedInterviewTypeId} 
+                        onInterviewTypeChange={handleInterviewTypeChange} 
+                      />
+                    </div>
+                    
+                    
+                    <div className="p-4 bg-blue-500/20 border border-blue-500 rounded-lg">
+                      <h4 className="text-blue-300 font-semibold mb-2">🎯 Sistema de Niveles Progresivo</h4>
+                      <div className="space-y-2 text-sm text-blue-200">
+                        <div className="flex items-center gap-2">
+                          <span>🚀</span>
+                          <span><strong>Comienzas en Junior</strong> - Avance automático por desempeño</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span>📊</span>
+                          <span>Evaluación integral: <strong>60% contenido + 40% comunicación</strong></span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span>🎯</span>
+                          <span>Puntajes requeridos: <strong>Junior → 70% | Mid → 75% | Senior → 80%</strong></span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2 text-sm text-gray-400">
+                      <div className="flex items-center gap-2">
+                        <span>📝</span>
+                        <span>{currentDifficultyConfig.totalQuestions} preguntas por nivel</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span>⏱️</span>
+                        <span>Tiempo por pregunta: {currentDifficultyConfig.timePerQuestion / 60}min</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span>🕐</span>
+                        <span>Tiempo total: {formatTotalTime(currentDifficultyConfig.totalTime)}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span>👤</span>
+                        <span>Entrevistado: <strong className="text-white">{userName || 'Candidato/a'}</strong></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-6 bg-gray-900/20 border border-gray-700 rounded-lg flex flex-col">
+                  <div className="flex-1">
+                    <h3 className="text-white font-semibold mb-2">Estado del sistema</h3>
+                    <p className="text-sm text-gray-400 mb-4">
+                      Todo listo para comenzar la entrevista STAR
+                    </p>
+                    
+                    <div className="bg-green-500/20 border border-green-500 rounded-lg p-4 mb-4">
+                      <h4 className="text-green-300 font-semibold mb-2">✅ Sistema Automático Activado</h4>
+                      <p className="text-sm text-green-200">
+                        Tu progreso se evaluará automáticamente al finalizar cada nivel.
+                        No necesitas seleccionar dificultad - el sistema se adapta a tu desempeño.
+                      </p>
+                    </div>
+
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <button 
+                      onClick={handleStartInterview} 
+                      disabled={isStartingInterview || !selectedInterviewTypeId}
+                      className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg transition-all duration-200 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      {isStartingInterview ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Iniciando...
+                        </>
+                      ) : (
+                        `🎤 Comenzar Entrevista ${currentDifficulty.toUpperCase()}`
+                      )}
+                    </button>
+                    
+                    {error && (
+                      <div className="p-3 bg-red-500/20 border border-red-500 rounded-lg text-red-300 text-sm">
+                        {error}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-8">
+                {isEvaluatingLevel && isGeneratingFeedback && (
+                  <div className="p-4 bg-purple-500/20 border border-purple-500 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="animate-spin">⏳</div>
+                      <div>
+                        <h4 className="font-bold text-purple-300">Evaluando tu desempeño...</h4>
+                        <p className="text-purple-200 text-sm">
+                          Analizando tus respuestas y habilidades de comunicación. Esto puede tomar unos momentos.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {canAdvanceToNextLevel && !isEvaluatingLevel && (
+                  <div className="p-4 bg-gradient-to-r from-green-500 to-emerald-600 border border-green-400 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">🎉</span>
+                        <div>
+                          <h4 className="font-bold text-white">¡Puedes avanzar al siguiente nivel!</h4>
+                          <p className="text-green-100 text-sm">
+                            Puntuación: <strong>{overallScore}/100</strong> - {getNextLevel() ? `Próximo nivel: ${getNextLevel()?.toUpperCase()}` : '¡Nivel máximo alcanzado!'}
+                          </p>
+                        </div>
+                      </div>
+                      {getNextLevel() && (
+                        <button
+                          onClick={handleAdvanceToNextLevel}
+                          className="bg-white text-green-600 font-semibold py-2 px-4 rounded-lg hover:bg-gray-100 transition-colors"
+                        >
+                          Avanzar Automáticamente
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+                {isInterviewFinished && !canAdvanceToNextLevel && !isEvaluatingLevel && (
+                  <div className="p-4 bg-orange-500/20 border border-orange-500 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">🔄</span>
+                        <div>
+                          <h4 className="font-bold text-orange-300">Practica más en este nivel</h4>
+                          <p className="text-orange-200 text-sm">
+                            Puntuación: <strong>{overallScore}/100</strong> - Puedes reiniciar la entrevista en el mismo nivel para mejorar tu desempeño.
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={restartSameLevel}
+                        className="bg-orange-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-orange-600 transition-colors"
+                      >
+                        Reiniciar en {currentDifficulty.toUpperCase()}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid lg:grid-cols-3 gap-8">
+             
+                  <div className="lg:col-span-2 space-y-6">
+                    <div className="bg-gray-800/40 border border-gray-700 rounded-xl p-6">
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                          <div className="bg-purple-600 text-white text-sm font-semibold px-3 py-1 rounded-full">
+                            Pregunta {currentQuestionNumber} de {totalQuestions}
+                          </div>
+                          <div className="bg-blue-600 text-white text-sm font-semibold px-3 py-1 rounded-full">
+                            Nivel: {currentDifficulty.toUpperCase()}
+                          </div>
+                          {isLastQuestion() && interviewHistory.length >= totalQuestions - 1 && !isInterviewFinished && (
+                            <div className="bg-orange-600 text-white text-sm font-semibold px-3 py-1 rounded-full">
+                              🎯 ÚLTIMA PREGUNTA
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="text-right">
+                          <div className={`text-2xl font-bold ${timeLeft <= 10 ? 'text-red-400' : 'text-white'}`}>
+                            {timeLeft}s
+                          </div>
+                          <div className="text-xs text-gray-400">
+                            {isTimerRunning ? '⏰ En progreso' : '⏸️ Pausado'}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="w-full bg-gray-700 rounded-full h-2 mb-6">
+                        <div 
+                          className="bg-green-500 h-2 rounded-full transition-all duration-500" 
+                          style={{ width: `${(currentQuestionNumber / totalQuestions) * 100}%` }} 
+                        />
+                      </div>
+                      <div className="mb-6">
+                        <h3 className="text-white font-semibold mb-4">Pregunta Actual</h3>
+                        <InterviewHistory
+                          transcribedText={transcribedText}
+                          aiResponse={aiResponse}
+                          interviewHistory={interviewHistory}
+                          initialQuestion={initialQuestion}
+                        />
+                      </div>
+                      {!isInterviewFinished && (
+                        <div className="flex flex-col items-center space-y-6 mb-6">
+                          <AudioRecorder
+                            ref={audioRecorderRef}
+                            isRecording={isRecording}
+                            isProcessing={isProcessing}
+                            isInterviewFinished={isInterviewFinished}
+                            onRecordingStart={handleRecordingStart}
+                            onRecordingStop={handleRecordingStop}
+                            onAudioProcessed={handleAudioProcessed}
+                            onError={handleError}
+                          />
+                          
+                          <div className="text-center">
+                            {isRecording ? (
+                              <div className="flex items-center justify-center gap-3 text-green-400">
+                                <span className="animate-pulse">🎙️ Grabando...</span>
+                                <div className="flex space-x-1 items-end">
+                                  <div className="h-3 w-1 bg-green-400 animate-bounce" />
+                                  <div className="h-5 w-1 bg-green-300 animate-bounce delay-100" />
+                                  <div className="h-4 w-1 bg-green-400 animate-bounce delay-200" />
+                                </div>
+                              </div>
+                            ) : isProcessing ? (
+                              <div className="text-yellow-400 text-sm">
+                                🔄 Procesando tu respuesta... (Puede tomar hasta 2 minutos)
+                              </div>
+                            ) : (
+                              <div className="text-gray-400 text-sm">
+                                🎤 Toca el micrófono para grabar tu respuesta
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      <div>
+                        <h3 className="text-white font-semibold mb-4">Resumen y análisis</h3>
+                        <SummarySection
+                          summary={summary}
+                          isSendingEmail={isSendingEmail}
+                          onSendEmail={handleSendEmail}
+                          onRestartInterview={restartSameLevel} 
+                          interviewHistoryLength={interviewHistory.length}
+                          candidateMetricsHistory={candidateMetricsHistory}
+                          currentLevel={currentDifficulty}
+                          isEvaluatingLevel={isEvaluatingLevel}
+                          canAdvanceToNextLevel={canAdvanceToNextLevel}
+                          overallScore={overallScore}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+             
+                  <div className="space-y-6">
+                    <div className="bg-gray-800/40 border border-gray-700 rounded-xl p-6">
+                      <h3 className="text-white font-semibold mb-4">Controles</h3>
+                      <div className="space-y-4">
+                        <InterviewTypeSelector
+                          selectedInterviewTypeId={selectedInterviewTypeId}
+                          onInterviewTypeChange={handleInterviewTypeChange}
+                        />
+                        
+                        <ControlButtons
+                          isRecording={isRecording}
+                          isInterviewFinished={isInterviewFinished}
+                          interviewHistoryLength={interviewHistory.length}
+                          isGeneratingFeedback={isGeneratingFeedback}
+                          summary={summary}
+                          onFinishInterview={handleFinishInterview}
+                          onGenerateCompleteFeedback={handleGenerateCompleteFeedback}
+                          onRestartInterview={restartSameLevel} 
+                          onAdvanceToNextLevel={handleAdvanceToNextLevel}
+                          canAdvanceToNextLevel={canAdvanceToNextLevel}
+                          isEvaluatingLevel={isEvaluatingLevel}
+                        />
+                      </div>
+                    </div>
+
+                    {error && (
+                      <div className="p-4 bg-red-500/20 border border-red-500 rounded-lg">
+                        <p className="text-red-300 text-sm">{error}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
           </div>
-        )}
 
-        <div className="mt-8 flex flex-col space-y-4">
-          {!isInterviewFinished && (
-            <div className="flex justify-center">
-              <button
-                onClick={() => setShowConfirm(true)}
-                disabled={isRecording}
-                className={`
-                  flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold shadow-md transition-all duration-300
-                  ${isRecording 
-                    ? "opacity-50 cursor-not-allowed bg-red-800/40 border border-red-700 text-red-200"
-                    : "bg-red-600 hover:bg-red-500 text-white hover:shadow-lg"
-                  }
-                `}
-              >
-                🏁 Finalizar entrevista
-              </button>
-            </div>
-          )}
-
-          {isInterviewFinished && !summary && (
-            <button
-              onClick={generateSummary}
-              disabled={isGeneratingSummary || interviewHistory.length === 0}
-              className="px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl"
-            >
-              {isGeneratingSummary ? "📝 Generando..." : "📝 Generar Feedback"}
-            </button>
-          )}
         </div>
-
-        {summary && (
-          <div className="mt-8 space-y-6">
-            <div className="p-6 bg-purple-900/30 border border-purple-700 rounded-lg">
-              <h3 className="text-purple-300 font-semibold mb-3 flex items-center">
-                📊 Resumen de la Entrevista
-              </h3>
-              <div className="text-white text-base leading-relaxed bg-gray-800/50 p-4 rounded-lg prose prose-invert max-w-none">
-                <ReactMarkdown
-                  components={{
-                    strong: ({children}) => <strong className="font-bold text-purple-100">{children}</strong>,
-                    p: ({children}) => <p className="mb-3 last:mb-0">{children}</p>,
-                    ul: ({children}) => <ul className="list-disc list-inside mb-3 space-y-1">{children}</ul>,
-                    ol: ({children}) => <ol className="list-decimal list-inside mb-3 space-y-1">{children}</ol>,
-                    li: ({children}) => <li className="ml-2">{children}</li>
-                  }}
-                >
-                  {summary}
-                </ReactMarkdown>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3">
-              <button
-                onClick={sendEmailToCandidate}
-                disabled={isSendingEmail}
-                className="flex-1 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl"
-              >
-                {isSendingEmail ? "📧 Enviando..." : "📧 Enviar Feedback por Email"}
-              </button>
-
-              <button
-                onClick={restartInterview}
-                className="flex-1 px-6 py-3 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl flex items-center justify-center gap-2"
-              >
-                <ArrowPathIcon className="h-5 w-5" />
-                Reiniciar Entrevista
-              </button>
-            </div>
-          </div>
-        )}
-
-        {isInterviewFinished && !summary && (
-          <div className="mt-6">
-            <button
-              onClick={restartInterview}
-              className="w-full px-6 py-3 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl flex items-center justify-center gap-2"
-            >
-              <ArrowPathIcon className="h-5 w-5" />
-              Reiniciar Entrevista
-            </button>
-          </div>
-        )}
-
-        {showConfirm && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50 p-4">
-            <div className="bg-gray-800 p-6 rounded-xl shadow-xl text-center max-w-sm w-full border border-gray-700">
-              <h3 className="text-white text-lg font-bold mb-3">¿Finalizar entrevista?</h3>
-              <p className="text-gray-300 mb-4 text-sm">
-                Esta acción no se puede deshacer. Asegúrate de haber completado todas las preguntas.
-              </p>
-              <div className="flex gap-3 justify-center">
-                <button
-                  onClick={() => setShowConfirm(false)}
-                  className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg text-white transition flex-1"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleConfirm}
-                  disabled={loading}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg text-white transition flex-1 disabled:opacity-50"
-                >
-                  {loading ? "Finalizando..." : "Sí, finalizar"}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
