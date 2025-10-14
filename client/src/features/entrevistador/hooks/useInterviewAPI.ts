@@ -1,65 +1,13 @@
-// src/app/(Dashboard)/entrevistador/hooks/useInterviewAPI.ts
+// src/features/entrevistador/hooks/useInterviewAPI.ts
 import { useUser } from "@clerk/nextjs";
 import apiClient from '@/lib/api/client';
-
-export interface StartStarInterviewResponse {
-  success: boolean;
-  data?: {
-    initialMessage: string; 
-    candidateName: string;
-    timestamp: string;
-    interviewId: number; // Añadimos el ID de la entrevista
-  };
-  error?: string;
-}
-
-export interface SendAudioResponse {
-  success: boolean;
-  text?: string;
-  translate?: string;
-  aiResponse?: string;
-  candidateMetrics?: any;
-  provider?: string;
-  error?: string;
-}
-
-export interface GenerateSummaryResponse {
-  success: boolean;
-  summary?: string;
-  data?: {
-    summary: string;
-  };
-  error?: string;
-}
-
-export interface SendEmailResponse {
-  success: boolean;
-  message?: string;
-  error?: string;
-}
-
-export interface EvaluateLevelResponse {
-  success: boolean;
-  canAdvance: boolean;
-  recommendedLevel: string;
-  score: number;
-  feedback: string;
-  error?: string;
-}
-export interface SaveFeedbackResponse {
-  success: boolean;
-  evaluationId?: number;
-  error?: string;
-}
-
-export interface FeedbackData {
-  interviewId?: number;
-  areasToImprove: string[];
-  strengths?: string[];
-  aiFeedback: string;
-  overallScore?: number;
-  difficultyLevel: string;
-}
+import type {
+  StartStarInterviewResponse,
+  SendAudioResponse,
+  GenerateSummaryResponse,
+  SendEmailResponse,
+  EvaluateLevelResponse
+} from './types/api.types';
 
 export const useInterviewAPI = () => {
   const { user } = useUser();
