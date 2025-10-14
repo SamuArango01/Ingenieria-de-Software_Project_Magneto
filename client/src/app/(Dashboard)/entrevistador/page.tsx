@@ -316,43 +316,37 @@ export default function EntrevistadorPage() {
 
 
   const handleFinalEvaluation = async () => {
-    if (interviewHistory.length === 0 || !interviewId) return; // 3. Añadimos guarda por si no hay ID
+    if (interviewHistory.length === 0 || !interviewId) return;
 
     clearFeedback();
-    
     updateState({ 
       isGeneratingFeedback: true, 
       error: "📊 Evaluando tu desempeño completo..." 
     });
     
     try {
-      console.log("🎯 Iniciando evaluación final del nivel:", currentDifficulty);
+      console.log("🎯 Iniciando evaluación final y guardado para la entrevista:", interviewId);
 
-      // Primero, generamos y guardamos la evaluación
-      const evaluationResult = await generateAndSaveEvaluation(interviewHistory, interviewId);
+      const result = await generateAndSaveEvaluation(interviewHistory, interviewId);
 
-      if (evaluationResult.success && evaluationResult.data) {
-        updateState({ 
-          summary: evaluationResult.summary
-        });
-
-        // Luego, usamos los datos de la evaluación guardada para el resto de la lógica
-        const finalScore = evaluationResult.data.rating;
-        // Asumimos que la lógica de avance se puede determinar con la puntuación
+      if (result.success && result.data) {
+        const finalScore = result.data.rating;
         const difficultyConfig = getCurrentDifficultyConfig();
-        const canAdvance = finalScore ? finalScore >= (difficultyConfig.requiredScore / 10) * 10 : false; // Ajustar escala si es necesario
+        // La puntuación de la IA viene de 1 a 10, la requerida es sobre 100. Ajustamos.
+        const canAdvance = finalScore ? (finalScore * 10) >= difficultyConfig.requiredScore : false;
 
         updateState({
+          summary: result.summary,
           canAdvanceToNextLevel: canAdvance,
-          overallScore: finalScore,
+          overallScore: finalScore ? finalScore * 10 : 0, // Mostramos sobre 100
           isGeneratingFeedback: false,
           isEvaluatingLevel: false, 
           error: canAdvance ? 
-            `🎉 ¡Excelente! Puntuación: ${finalScore}/10 - Puedes avanzar` :
-            `📊 Puntuación: ${finalScore}/10 - Sigue practicando en este nivel.`
+            `🎉 ¡Excelente! Puntuación: ${finalScore * 10}/100 - Puedes avanzar` :
+            `📊 Puntuación: ${finalScore ? finalScore * 10 : 'N/A'}/100 - Sigue practicando en este nivel.`
         });
       } else {
-        throw new Error(evaluationResult.error || "Error en la evaluación final");
+        throw new Error(result.error || "Error en la evaluación final");
       }
     } catch (err) {
       console.error("❌ Error en evaluación final:", err);
@@ -371,38 +365,8 @@ export default function EntrevistadorPage() {
   };
 
   const handleGenerateCompleteFeedback = async () => {
-    if (interviewHistory.length === 0 || !interviewId) {
-      updateState({ error: "No hay entrevista activa para generar feedback" });
-      return;
-    }
-
-    clearFeedback();
-    
-    updateState({ 
-      isGeneratingFeedback: true,
-      error: "" 
-    });
-    
-    try {
-      console.log("📊 Generando análisis completo...");
-      const result = await generateAndSaveEvaluation(interviewHistory, interviewId);
-
-      if (result.success) {
-        updateState({ 
-          summary: result.summary,
-          error: "✅ Análisis completo generado y guardado exitosamente"
-        });
-      } else {
-        throw new Error(result.error || "Error generando el análisis");
-      }
-    } catch (err) {
-      console.error(" Error generando feedback:", err);
-      updateState({ 
-        error: err instanceof Error ? err.message : "Error al conectar con el servidor" 
-      });
-    } finally {
-      updateState({ isGeneratingFeedback: false });
-    }
+    // Esta función ahora simplemente llama a la evaluación principal
+    await handleFinalEvaluation();
   };
 
   const handleFinishInterview = () => {

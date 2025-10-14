@@ -7,7 +7,7 @@ import type { InterviewType } from '@/features/interview-types/models/interview-
  */
 export const getAvailableInterviewTypes = async (): Promise<InterviewType[]> => {
   try {
-    const response = await apiClient.get<InterviewType[]>('v1/interview-types/available');
+    const response = await apiClient.get<InterviewType[]>('/v1/interview-types/available');
     return response.data;
   } catch (error) {
     throw extractNormalizedApiError(error);
@@ -19,7 +19,7 @@ export const getAvailableInterviewTypes = async (): Promise<InterviewType[]> => 
  */
 export const getUserInterviewTypes = async (): Promise<InterviewType[]> => {
   try {
-    const response = await apiClient.get<InterviewType[]>('v1/interview-types');
+    const response = await apiClient.get<InterviewType[]>('/v1/interview-types');
     return response.data;
   } catch (error) {
     throw extractNormalizedApiError(error);
@@ -32,7 +32,7 @@ export const getUserInterviewTypes = async (): Promise<InterviewType[]> => {
  */
 export const getInterviewTypeById = async (id: number): Promise<InterviewType> => {
   try {
-    const response = await apiClient.get<InterviewType>(`v1/interview-types/${id}`);
+    const response = await apiClient.get<InterviewType>(`/v1/interview-types/${id}`);
     return response.data;
   } catch (error) {
     throw extractNormalizedApiError(error);
@@ -44,7 +44,7 @@ export const getInterviewTypeById = async (id: number): Promise<InterviewType> =
  */
 export const createInterviewType = async (data: { name: string; description: string }): Promise<InterviewType> => {
   try {
-    const response = await apiClient.post<InterviewType>('v1/interview-types', data);
+    const response = await apiClient.post<InterviewType>('/v1/interview-types', data);
     return response.data;
   } catch (error) {
     throw extractNormalizedApiError(error);
@@ -56,7 +56,7 @@ export const createInterviewType = async (data: { name: string; description: str
  */
 export const updateInterviewType = async (id: number, data: { name: string; description: string }): Promise<InterviewType> => {
   try {
-    const response = await apiClient.put<InterviewType>(`v1/interview-types/${id}`, data);
+    const response = await apiClient.put<InterviewType>(`/v1/interview-types/${id}`, data);
     return response.data;
   } catch (error) {
     throw extractNormalizedApiError(error);
@@ -68,7 +68,7 @@ export const updateInterviewType = async (id: number, data: { name: string; desc
  */
 export const toggleInterviewTypeActive = async (id: number): Promise<InterviewType> => {
   try {
-    const response = await apiClient.patch<InterviewType>(`v1/interview-types/${id}/toggle-active`);
+    const response = await apiClient.patch<InterviewType>(`/v1/interview-types/${id}/toggle-active`);
     return response.data;
   } catch (error) {
     throw extractNormalizedApiError(error);

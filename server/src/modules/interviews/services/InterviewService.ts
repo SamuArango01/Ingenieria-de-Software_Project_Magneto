@@ -509,9 +509,56 @@ private calculateOverallScore(candidateMetrics: any): number {
 }
 
     private getMostFrequentItems(items: string[]): string[] {
+        const frequency: { [key: string]: number } = {};
+        
+        items.forEach(item => {
+            frequency[item] = (frequency[item] || 0) + 1;
+        });
 
+        return Object.entries(frequency)
+            .sort(([, a], [, b]) => b - a)
+            .slice(0, 3)
+            .map(([item]) => item);
+    }
 
-private buildUnifiedMetricsContext(averageMetrics: any): string {
+    calculateAverageCandidateMetrics(candidateMetrics: any[]): any {
+        if (!candidateMetrics || candidateMetrics.length === 0) {
+            return null;
+        }
+
+        const sum = candidateMetrics.reduce((acc, metrics) => {
+            return {
+                wordsPerMinute: acc.wordsPerMinute + (metrics.wordsPerMinute || 0),
+                fluencyScore: acc.fluencyScore + (metrics.fluencyScore || 0),
+                clarityScore: acc.clarityScore + (metrics.clarityScore || 0),
+                confidenceScore: acc.confidenceScore + (metrics.confidenceScore || 0),
+                fillerWordsRatio: acc.fillerWordsRatio + (metrics.fillerWordsRatio || 0),
+                strengths: [...acc.strengths, ...(metrics.strengths || [])],
+                improvementAreas: [...acc.improvementAreas, ...(metrics.improvementAreas || [])]
+            };
+        }, {
+            wordsPerMinute: 0,
+            fluencyScore: 0,
+            clarityScore: 0,
+            confidenceScore: 0,
+            fillerWordsRatio: 0,
+            strengths: [] as string[],
+            improvementAreas: [] as string[]
+        });
+
+        const count = candidateMetrics.length;
+        return {
+            wordsPerMinute: Math.round(sum.wordsPerMinute / count),
+            fluencyScore: sum.fluencyScore / count,
+            clarityScore: sum.clarityScore / count,
+            confidenceScore: sum.confidenceScore / count,
+            fillerWordsRatio: sum.fillerWordsRatio / count,
+            strengths: this.getMostFrequentItems(sum.strengths),
+            improvementAreas: this.getMostFrequentItems(sum.improvementAreas)
+        };
+    }
+
+    private buildUnifiedMetricsContext(averageMetrics: any): string {
     const fluencyPercent = (averageMetrics.fluencyScore * 100).toFixed(0);
     const clarityPercent = (averageMetrics.clarityScore * 100).toFixed(0);
     const confidencePercent = (averageMetrics.confidenceScore * 100).toFixed(0);
