@@ -8,10 +8,18 @@ import type {
   EvaluateLevelResponse
 } from '../types/api.types';
 
+interface StartInterviewParams {
+  candidateName: string;
+  interviewTypeId: string;
+  difficultyLevel: string;
+}
+
 export const startStarInterview = async (
-  candidateName: string,
-  interviewTypeId: string,
-  difficultyLevel: string
+  {
+  candidateName,
+  interviewTypeId,
+  difficultyLevel,
+  }: StartInterviewParams
 ): Promise<StartStarInterviewResponse> => {
   try {
     const response = await apiClient.post("v1/interviews/start-star-interview", {
