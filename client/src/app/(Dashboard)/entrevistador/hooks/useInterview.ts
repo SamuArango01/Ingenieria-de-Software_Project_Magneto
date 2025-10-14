@@ -5,7 +5,7 @@ import { useState, useCallback } from 'react';
 export const DIFFICULTY_LEVELS = {
   junior: {
     timePerQuestion: 120, // 2 minutos
-    totalQuestions: 2,
+    totalQuestions: 5,
     totalTime: 1080, // 18 minutos
     name: 'Junior',
     description: 'Nivel básico - Preguntas fundamentales',

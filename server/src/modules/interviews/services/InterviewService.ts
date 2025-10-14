@@ -410,7 +410,7 @@ INSTRUCCIONES PARA EL FEEDBACK:
 5. Da recomendaciones concretas para el siguiente nivel
 6. Termina con un mensaje motivador
 
-Máximo 200 palabras. Lenguaje natural y constructivo.
+Máximo 50 palabras. Lenguaje natural y constructivo.
             `;
 
             const feedback = await generateContent(feedbackPrompt);
