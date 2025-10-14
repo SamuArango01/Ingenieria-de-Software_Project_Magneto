@@ -27,7 +27,6 @@ export function EntrevistadorFeature() {
     stopTotalTimer,
     updateTotalTimeLeft,
     advanceToNextLevel,
-    evaluateLevelAdvancement, 
     finishInterviewForEvaluation,
     getCurrentDifficultyConfig,
     getNextLevel,
@@ -35,14 +34,18 @@ export function EntrevistadorFeature() {
   } = useInterview();
   
   const { 
-    startStarInterview, 
-    sendAudio, 
-    generateAndSaveEvaluation, // Usamos la nueva función
-    sendEmail, 
-    evaluateLevelAdvancement: evaluateLevelAPI,
+    useStartStarInterview,
+    useSendAudio,
+    useGenerateAndSaveEvaluation,
+    useSendEmail,
     userEmail, 
     userName 
   } = useInterviewAPI();
+
+  const startInterviewMutation = useStartStarInterview();
+  const sendAudioMutation = useSendAudio();
+  const generateAndSaveEvaluationMutation = useGenerateAndSaveEvaluation();
+  const sendEmailMutation = useSendEmail();
 
   const {
     isRecording,
@@ -71,7 +74,6 @@ export function EntrevistadorFeature() {
     isEvaluatingLevel,
   } = state;
 
-  const [isStartingInterview, setIsStartingInterview] = useState(false);
   const [interviewId, setInterviewId] = useState<number | null>(null);
   const audioRecorderRef = useRef<AudioRecorderHandle>(null);
 
@@ -170,49 +172,51 @@ export function EntrevistadorFeature() {
     };
   }, [isTotalTimerRunning, totalTimeLeft, updateTotalTimeLeft, handleTotalTimeEnd]);
 
-  const handleStartInterview = async () => {
+  const handleStartInterview = () => {
     if (!selectedInterviewTypeId) {
       updateState({ error: "Por favor, selecciona un tipo de entrevista" });
       return;
     }
 
-    setIsStartingInterview(true);
     updateState({ error: "" });
 
-    try {
-      console.log("🚀 Iniciando entrevista con:", {
-        selectedInterviewTypeId,
-        currentDifficulty,
-        userName
-      });
+    console.log("🚀 Iniciando entrevista con:", {
+      selectedInterviewTypeId,
+      currentDifficulty,
+      userName
+    });
 
-      const result = await startStarInterview(selectedInterviewTypeId, currentDifficulty);
-      
-      if (result.success && result.data) {
-        setInterviewId(result.data.interviewId);
-        startInterview(result.data.initialMessage);
-        
-        const difficultyConfig = getCurrentDifficultyConfig();
-        resetTimer(difficultyConfig.timePerQuestion);
-        startTotalTimer();
-        
-        console.log("👤 Entrevista para:", userName, "Nivel:", currentDifficulty);
-        console.log("📊 Configuración:", {
-          totalQuestions: difficultyConfig.totalQuestions,
-          timePerQuestion: difficultyConfig.timePerQuestion,
-          totalTime: difficultyConfig.totalTime
+    startInterviewMutation.mutate({ 
+      interviewTypeId: selectedInterviewTypeId, 
+      difficultyLevel: currentDifficulty, 
+      candidateName: userName 
+    }, {
+      onSuccess: (result) => {
+        if (result.success && result.data) {
+          setInterviewId(result.data.interviewId);
+          startInterview(result.data.initialMessage);
+          
+          const difficultyConfig = getCurrentDifficultyConfig();
+          resetTimer(difficultyConfig.timePerQuestion);
+          startTotalTimer();
+          
+          console.log("👤 Entrevista para:", userName, "Nivel:", currentDifficulty);
+          console.log("📊 Configuración:", {
+            totalQuestions: difficultyConfig.totalQuestions,
+            timePerQuestion: difficultyConfig.timePerQuestion,
+            totalTime: difficultyConfig.totalTime
+          });
+        } else {
+          throw new Error(result.error || "Error al iniciar la entrevista");
+        }
+      },
+      onError: (err) => {
+        console.error(" Error al iniciar entrevista:", err);
+        updateState({ 
+          error: err instanceof Error ? err.message : "Error al conectar con el servidor" 
         });
-      } else {
-        throw new Error(result.error || "Error al iniciar la entrevista");
       }
-    } catch (err) {
-      console.error(" Error al iniciar entrevista:", err);
-      updateState({ 
-        error: err instanceof Error ? err.message : "Error al conectar con el servidor" 
-      });
-    } finally {
-      setIsStartingInterview(false);
-    }
+    });
   };
 
   const handleRecordingStart = useCallback(() => {
@@ -240,7 +244,7 @@ export function EntrevistadorFeature() {
     updateState({ isRecording: true, error: "" });
   }, [isInterviewStarted, isInterviewFinished, isLastQuestion, interviewHistory.length, totalQuestions, isTimerRunning, startTimer, updateState]);
 
-  const handleAudioProcessed = async (audioBlob: Blob) => {
+  const handleAudioProcessed = (audioBlob: Blob) => {
     console.log("🎵 Procesando audio, pregunta actual:", currentQuestionNumber);
     
     if (!isInterviewStarted || isInterviewFinished) {
@@ -250,70 +254,69 @@ export function EntrevistadorFeature() {
 
     updateState({ isProcessing: true, error: "" });
 
-    try {
-      const result = await sendAudio(audioBlob, selectedInterviewTypeId, currentDifficulty);
+    sendAudioMutation.mutate({ audioBlob, interviewTypeId, difficultyLevel: currentDifficulty }, {
+      onSuccess: (result) => {
+        if (result.success && result.aiResponse) {
+          const newCandidateMetrics = result.candidateMetrics ? 
+            [...candidateMetricsHistory, result.candidateMetrics] : 
+            candidateMetricsHistory;
 
-      if (result.success && result.aiResponse) {
-        const newCandidateMetrics = result.candidateMetrics ? 
-          [...candidateMetricsHistory, result.candidateMetrics] : 
-          candidateMetricsHistory;
+          const newInterviewHistory = [
+            ...interviewHistory,
+            { 
+              user: result.text || "(Audio procesado)", 
+              ai: result.aiResponse 
+            },
+          ];
 
-        const newInterviewHistory = [
-          ...interviewHistory,
-          { 
-            user: result.text || "(Audio procesado)", 
-            ai: result.aiResponse 
-          },
-        ];
-
-
-        updateState({
-          transcribedText: result.text || "",
-          aiResponse: result.aiResponse,
-          interviewHistory: newInterviewHistory,
-          candidateMetricsHistory: newCandidateMetrics,
-          isProcessing: false,
-          error: ""
-        });
-
-        setTimeout(() => {
-          const shouldAdvance = !isLastQuestion();
-          const hasCompletedAllQuestions = interviewHistory.length + 1 >= totalQuestions;
-          
-          console.log("⏱️ Decidiendo avance:", {
-            shouldAdvance,
-            hasCompletedAllQuestions,
-            currentQuestion: currentQuestionNumber,
-            totalQuestions: totalQuestions,
-            interviewHistoryLength: interviewHistory.length,
-            isLastQuestion: isLastQuestion()
+          updateState({
+            transcribedText: result.text || "",
+            aiResponse: result.aiResponse,
+            interviewHistory: newInterviewHistory,
+            candidateMetricsHistory: newCandidateMetrics,
+            isProcessing: false,
+            error: ""
           });
 
-          if (shouldAdvance && !hasCompletedAllQuestions) {
-            goToNextQuestion();
+          setTimeout(() => {
+            const shouldAdvance = !isLastQuestion();
+            const hasCompletedAllQuestions = interviewHistory.length + 1 >= totalQuestions;
             
-            const difficultyConfig = getCurrentDifficultyConfig();
-            resetTimer(difficultyConfig.timePerQuestion);
-          } else {
-            finishInterviewForEvaluation();
-          }
-        }, 1000);
+            console.log("⏱️ Decidiendo avance:", {
+              shouldAdvance,
+              hasCompletedAllQuestions,
+              currentQuestion: currentQuestionNumber,
+              totalQuestions: totalQuestions,
+              interviewHistoryLength: interviewHistory.length,
+              isLastQuestion: isLastQuestion()
+            });
 
-      } else {
-        throw new Error(result.error || "No se pudo generar respuesta del asistente");
+            if (shouldAdvance && !hasCompletedAllQuestions) {
+              goToNextQuestion();
+              
+              const difficultyConfig = getCurrentDifficultyConfig();
+              resetTimer(difficultyConfig.timePerQuestion);
+            } else {
+              finishInterviewForEvaluation();
+            }
+          }, 1000);
+
+        } else {
+          throw new Error(result.error || "No se pudo generar respuesta del asistente");
+        }
+      },
+      onError: (err: any) => {
+        console.error(" Error en handleAudioProcessed:", err);
+        updateState({ 
+          error: err.message || "Error al procesar audio",
+          isProcessing: false
+        });
       }
-
-    } catch (err: any) {
-      console.error(" Error en handleAudioProcessed:", err);
-      updateState({ 
-        error: err.message || "Error al procesar audio",
-        isProcessing: false
-      });
-    }
+    });
   };
 
 
-  const handleFinalEvaluation = async () => {
+  const handleFinalEvaluation = () => {
     if (interviewHistory.length === 0 || !interviewId) return;
 
     clearFeedback();
@@ -322,37 +325,38 @@ export function EntrevistadorFeature() {
       error: "📊 Evaluando tu desempeño completo..." 
     });
     
-    try {
-      console.log("🎯 Iniciando evaluación final y guardado para la entrevista:", interviewId);
+    console.log("🎯 Iniciando evaluación final y guardado para la entrevista:", interviewId);
 
-      const result = await generateAndSaveEvaluation(interviewHistory, interviewId);
+    generateAndSaveEvaluationMutation.mutate({ interviewHistory, interviewId }, {
+      onSuccess: (result) => {
+        if (result.success && result.data) {
+          const finalScore = result.data.rating;
+          const difficultyConfig = getCurrentDifficultyConfig();
+          const canAdvance = finalScore ? (finalScore * 10) >= difficultyConfig.requiredScore : false;
 
-      if (result.success && result.data) {
-        const finalScore = result.data.rating;
-        const difficultyConfig = getCurrentDifficultyConfig();
-        const canAdvance = finalScore ? (finalScore * 10) >= difficultyConfig.requiredScore : false;
-
-        updateState({
-          summary: result.summary,
-          canAdvanceToNextLevel: canAdvance,
-          overallScore: finalScore ? finalScore * 10 : 0,
+          updateState({
+            summary: result.summary,
+            canAdvanceToNextLevel: canAdvance,
+            overallScore: finalScore ? finalScore * 10 : 0,
+            isGeneratingFeedback: false,
+            isEvaluatingLevel: false, 
+            error: canAdvance ? 
+              `🎉 ¡Excelente! Puntuación: ${finalScore * 10}/100 - Puedes avanzar` :
+              `📊 Puntuación: ${finalScore ? finalScore * 10 : 'N/A'}/100 - Sigue practicando en este nivel.`
+          });
+        } else {
+          throw new Error(result.error || "Error en la evaluación final");
+        }
+      },
+      onError: (err) => {
+        console.error("❌ Error en evaluación final:", err);
+        updateState({ 
+          error: err instanceof Error ? err.message : "Error evaluando desempeño",
           isGeneratingFeedback: false,
-          isEvaluatingLevel: false, 
-          error: canAdvance ? 
-            `🎉 ¡Excelente! Puntuación: ${finalScore * 10}/100 - Puedes avanzar` :
-            `📊 Puntuación: ${finalScore ? finalScore * 10 : 'N/A'}/100 - Sigue practicando en este nivel.`
+          isEvaluatingLevel: false 
         });
-      } else {
-        throw new Error(result.error || "Error en la evaluación final");
       }
-    } catch (err) {
-      console.error("❌ Error en evaluación final:", err);
-      updateState({ 
-        error: err instanceof Error ? err.message : "Error evaluando desempeño",
-        isGeneratingFeedback: false,
-        isEvaluatingLevel: false 
-      });
-    }
+    });
   };
 
  
@@ -370,7 +374,7 @@ export function EntrevistadorFeature() {
     finishInterviewForEvaluation();
   };
 
-  const handleSendEmail = async () => {
+  const handleSendEmail = () => {
     if (!summary) {
       updateState({ error: "Primero genera el análisis antes de enviar el email" });
       return;
@@ -383,21 +387,23 @@ export function EntrevistadorFeature() {
 
     updateState({ isSendingEmail: true, error: "" });
     
-    try {
-      const result = await sendEmail(userEmail, userName, interviewHistory, summary, currentDifficulty);
-
-      if (result.success) {
-        alert(`✅ Correo enviado exitosamente a ${userEmail}`);
-      } else {
-        throw new Error(result.error || "Error al enviar el correo");
+    sendEmailMutation.mutate({ userEmail, userName, interviewHistory, summary, difficultyLevel: currentDifficulty }, {
+      onSuccess: (result) => {
+        if (result.success) {
+          alert(`✅ Correo enviado exitosamente a ${userEmail}`);
+        } else {
+          throw new Error(result.error || "Error al enviar el correo");
+        }
+      },
+      onError: (err) => {
+        updateState({ 
+          error: err instanceof Error ? err.message : 'Error de conexión al enviar el correo' 
+        });
+      },
+      onSettled: () => {
+        updateState({ isSendingEmail: false });
       }
-    } catch (err) {
-      updateState({ 
-        error: err instanceof Error ? err.message : 'Error de conexión al enviar el correo' 
-      });
-    } finally {
-      updateState({ isSendingEmail: false });
-    }
+    });
   };
 
   const handleInterviewTypeChange = (value: string) => {
@@ -519,10 +525,10 @@ export function EntrevistadorFeature() {
                   <div className="space-y-3">
                     <button 
                       onClick={handleStartInterview} 
-                      disabled={isStartingInterview || !selectedInterviewTypeId}
+                      disabled={startInterviewMutation.isPending || !selectedInterviewTypeId}
                       className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg transition-all duration-200 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
-                      {isStartingInterview ? (
+                      {startInterviewMutation.isPending ? (
                         <>
                           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                           Iniciando...
@@ -648,7 +654,7 @@ export function EntrevistadorFeature() {
                           <AudioRecorder
                             ref={audioRecorderRef}
                             isRecording={isRecording}
-                            isProcessing={isProcessing}
+                            isProcessing={sendAudioMutation.isPending}
                             isInterviewFinished={isInterviewFinished}
                             onRecordingStart={handleRecordingStart}
                             onRecordingStop={handleRecordingStop}
@@ -666,7 +672,7 @@ export function EntrevistadorFeature() {
                                   <div className="h-4 w-1 bg-green-400 animate-bounce delay-200" />
                                 </div>
                               </div>
-                            ) : isProcessing ? (
+                            ) : sendAudioMutation.isPending ? (
                               <div className="text-yellow-400 text-sm">
                                 🔄 Procesando tu respuesta... (Puede tomar hasta 2 minutos)
                               </div>
@@ -682,13 +688,13 @@ export function EntrevistadorFeature() {
                         <h3 className="text-white font-semibold mb-4">Resumen y análisis</h3>
                         <SummarySection
                           summary={summary}
-                          isSendingEmail={isSendingEmail}
+                          isSendingEmail={sendEmailMutation.isPending}
                           onSendEmail={handleSendEmail}
                           onRestartInterview={restartSameLevel} 
                           interviewHistoryLength={interviewHistory.length}
                           candidateMetricsHistory={candidateMetricsHistory}
                           currentLevel={currentDifficulty}
-                          isEvaluatingLevel={isEvaluatingLevel}
+                          isEvaluatingLevel={generateAndSaveEvaluationMutation.isPending}
                           canAdvanceToNextLevel={canAdvanceToNextLevel}
                           overallScore={overallScore}
                         />
@@ -710,7 +716,7 @@ export function EntrevistadorFeature() {
                           isRecording={isRecording}
                           isInterviewFinished={isInterviewFinished}
                           interviewHistoryLength={interviewHistory.length}
-                          isGeneratingFeedback={isGeneratingFeedback}
+                          isGeneratingFeedback={generateAndSaveEvaluationMutation.isPending}
                           summary={summary}
                           onFinishInterview={handleFinishInterview}
                           onGenerateCompleteFeedback={handleGenerateCompleteFeedback}

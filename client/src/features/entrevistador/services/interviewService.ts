@@ -39,10 +39,14 @@ export const startStarInterview = async (
   }
 };
 
+interface SendAudioParams {
+  audioBlob: Blob;
+  interviewTypeId: string | null;
+  difficultyLevel: string;
+}
+
 export const sendAudio = async (
-  audioBlob: Blob, 
-  interviewTypeId: string | null,
-  difficultyLevel: string
+  { audioBlob, interviewTypeId, difficultyLevel }: SendAudioParams
 ): Promise<SendAudioResponse> => {
   try {
     const formData = new FormData();
@@ -67,9 +71,13 @@ export const sendAudio = async (
   }
 };
 
+interface GenerateAndSaveEvaluationParams {
+  interviewHistory: any[];
+  interviewId: number;
+}
+
 export const generateAndSaveEvaluation = async (
-  interviewHistory: any[], 
-  interviewId: number
+  { interviewHistory, interviewId }: GenerateAndSaveEvaluationParams
 ): Promise<GenerateSummaryResponse> => {
   try {
     const response = await apiClient.post("/interview-evaluations", {
@@ -89,12 +97,16 @@ export const generateAndSaveEvaluation = async (
   }
 };
 
+interface SendEmailParams {
+  candidateEmail: string;
+  candidateName: string;
+  interviewHistory: any[];
+  summary: string;
+  difficultyLevel: string;
+}
+
 export const sendEmail = async (
-  candidateEmail: string, 
-  candidateName: string, 
-  interviewHistory: any[], 
-  summary: string,
-  difficultyLevel: string
+  { candidateEmail, candidateName, interviewHistory, summary, difficultyLevel }: SendEmailParams
 ): Promise<SendEmailResponse> => {
   try {
     const response = await apiClient.post("v1/interviews/email", {
@@ -113,10 +125,14 @@ export const sendEmail = async (
   }
 };
 
+interface EvaluateLevelAdvancementParams {
+  interviewHistory: any[];
+  candidateMetricsHistory: any[];
+  currentLevel: string;
+}
+
 export const evaluateLevelAdvancement = async (
-  interviewHistory: any[], 
-  candidateMetricsHistory: any[],
-  currentLevel: string
+  { interviewHistory, candidateMetricsHistory, currentLevel }: EvaluateLevelAdvancementParams
 ): Promise<EvaluateLevelResponse> => {
   try {
     const response = await apiClient.post("v1/interviews/evaluate-level", {
