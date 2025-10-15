@@ -28,10 +28,11 @@ export function EditInterviewType({ id }: EditInterviewTypeProps) {
   }
 
   return (
-    <CreateInterviewTypeForm 
-      form={form} 
-      onSubmit={onSubmit} 
-      isLoading={isUpdateLoading} 
+    <CreateInterviewTypeForm
+      form={form}
+      onSubmit={onSubmit}
+      isLoading={isUpdateLoading}
+      isEditMode={true}
     />
   );
 }
