@@ -10,11 +10,11 @@ export function useStartInterview() {
 
   const mutation = useMutation({
     mutationFn: (data: StartInterviewRequest) => startInterview(data),
-    onSuccess: (response) => {
+    onSuccess: (response, variables) => {
       // Guardar datos en el context y activar timer
       startInterviewContext({
         interviewId: response.data.interviewId,
-        interviewTypeId: null, // Se puede mejorar si el backend devuelve esto
+        interviewTypeId: variables.interviewTypeId ?? null,
         candidateName: response.data.candidateName,
         initialMessage: response.data.initialMessage,
       });

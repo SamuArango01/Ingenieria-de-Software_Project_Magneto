@@ -57,14 +57,16 @@ export class InterviewController {
             result.match(
                 (data) => {
                     console.log("Entrevista iniciada correctamente:", {
+                        interviewId: data.interviewId,
                         initialMessageLength: data.initialMessage?.length,
                         success: data.success
                     });
-                
+
                     res.json({
                         success: true,
                         data: {
-                            initialMessage: data.initialMessage, 
+                            initialMessage: data.initialMessage,
+                            interviewId: data.interviewId,
                             candidateName: candidateName,
                             timestamp: new Date().toISOString()
                         }
