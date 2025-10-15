@@ -1,8 +1,21 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
+import { usePathname } from "next/navigation";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
+
+// Mapeo de rutas a títulos
+const PAGE_TITLES: Record<string, string> = {
+  "/dashboard": "Dashboard",
+  "/entrevistador/init": "Iniciar Entrevista",
+  "/entrevistador/session": "Sesión de Entrevista",
+  "/entrevistador/summary": "Resumen de Entrevista",
+  "/interview-types/list": "Tipos de Entrevista",
+  "/interview-types/create": "Crear Tipo de Entrevista",
+  "/profile": "Perfil",
+  "/settings": "Configuración",
+};
 
 export default function DashboardLayout({
   children,
@@ -10,7 +23,13 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false); // New state for desktop sidebar collapse
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const pathname = usePathname();
+
+  // Obtener el título de la página actual
+  const pageTitle = useMemo(() => {
+    return PAGE_TITLES[pathname] || "Dashboard";
+  }, [pathname]);
 
   return (
     <div className="bg-gray-900 min-h-screen flex">
@@ -40,7 +59,7 @@ export default function DashboardLayout({
           onMobileSidebarToggle={() => setMobileSidebarOpen(!mobileSidebarOpen)}
           onDesktopSidebarToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
           isSidebarCollapsed={isSidebarCollapsed}
-          pageTitle="Dashboard"
+          pageTitle={pageTitle}
         />
 
         {/* Main content */}
