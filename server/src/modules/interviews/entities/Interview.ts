@@ -14,8 +14,8 @@ export class Interview {
     @JoinColumn({ name: "user_id" })
     user: User;
 
-    @Column({ name: "interview_type_id" })
-    interviewTypeId: number;
+    @Column({ name: "interview_type_id", nullable: true })
+    interviewTypeId: number | null;
 
     @ManyToOne(() => InterviewType)
     @JoinColumn({ name: "interview_type_id" })

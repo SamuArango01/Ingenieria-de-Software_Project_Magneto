@@ -30,7 +30,7 @@ export const sidebarConfig: SidebarItem[] = [
   },
   {
     title: "Entrevistas",
-    href: "/entrevistador",
+    href: "/entrevistador/init",
     icon: Users,
   },
   {

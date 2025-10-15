@@ -29,21 +29,27 @@ interface CreateInterviewTypeFormProps {
   form: UseFormReturn<CreateInterviewTypeValues>;
   onSubmit: (values: CreateInterviewTypeValues) => void;
   isLoading: boolean;
+  isEditMode?: boolean;
 }
 
-export function CreateInterviewTypeForm({ 
-  form, 
-  onSubmit, 
-  isLoading 
+export function CreateInterviewTypeForm({
+  form,
+  onSubmit,
+  isLoading,
+  isEditMode = false
 }: CreateInterviewTypeFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="w-full max-w-2xl">
         <Card className="w-full max-w-2xl bg-gray-800">
           <CardHeader>
-            <CardTitle className="text-white">Crear Nuevo Tipo de Entrevista</CardTitle>
+            <CardTitle className="text-white">
+              {isEditMode ? 'Editar Tipo de Entrevista' : 'Crear Nuevo Tipo de Entrevista'}
+            </CardTitle>
             <CardDescription className="text-gray-300">
-              Define un nuevo tipo de entrevista con un prompt personalizado para la IA.
+              {isEditMode
+                ? 'Modifica los detalles del tipo de entrevista.'
+                : 'Define un nuevo tipo de entrevista con un prompt personalizado para la IA.'}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -98,7 +104,9 @@ export function CreateInterviewTypeForm({
           </CardContent>
           <CardFooter>
             <Button type="submit" disabled={isLoading} className="bg-green-600 text-white hover:bg-green-700">
-              {isLoading ? 'Creando...' : 'Crear Tipo de Entrevista'}
+              {isLoading
+                ? (isEditMode ? 'Guardando...' : 'Creando...')
+                : (isEditMode ? 'Guardar Cambios' : 'Crear Tipo de Entrevista')}
             </Button>
           </CardFooter>
         </Card>

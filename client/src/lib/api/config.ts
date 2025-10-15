@@ -4,7 +4,7 @@ export const API_BASE_URL =
 // Configuración base de Axios
 export const axiosConfig = {
   baseURL: API_BASE_URL,
-  timeout: 30000,
+  timeout: 200000,
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
