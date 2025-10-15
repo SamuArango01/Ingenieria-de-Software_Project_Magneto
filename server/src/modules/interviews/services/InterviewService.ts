@@ -179,9 +179,7 @@ Keep it conversational, engaging, and appropriate for the difficulty level.`;
                 }
             }
 
-            console.log("🤖 Generando respuesta IA...");
             const aiResponse = await generateContent(aiResponsePrompt);
-            console.log("🤖 Respuesta IA:", aiResponse);
 
             return ok({
                 text: transcriptedText,

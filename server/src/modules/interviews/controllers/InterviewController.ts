@@ -106,14 +106,6 @@ export class InterviewController {
 
             const { interviewTypeId, difficultyLevel = 'junior' } = req.body;
 
-            console.log("Procesando audio:", {
-                userId,
-                interviewTypeId,
-                difficultyLevel,
-                file: req.file.originalname,
-                fileSize: req.file.size
-            });
-
             const result = await this.interviewService.processAudio(
                 userId, 
                 req.file.path, 
@@ -128,15 +120,6 @@ export class InterviewController {
 
             result.match(
                 (data) => {
-                    console.log("Audio procesado correctamente:", {
-                        tieneAIResponse: !!data.aiResponse,
-                        aiResponsePreview: data.aiResponse?.substring(0, 50) + "...",
-                        tieneText: !!data.text,
-                        textPreview: data.text?.substring(0, 30) + "...",
-                        tieneMetrics: !!data.candidateMetrics,
-                        canAdvance: data.canAdvanceToNextLevel
-                    });
-                    
                     res.json(data);
                 },
                 (error) => {
