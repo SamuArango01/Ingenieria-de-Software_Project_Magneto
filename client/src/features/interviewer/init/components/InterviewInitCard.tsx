@@ -127,7 +127,7 @@ export function InterviewInitCard({
                   <div className="flex items-start gap-3 bg-gray-700/30 rounded-lg p-3">
                     <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5"></div>
                     <p className="text-gray-300">
-                      <span className="font-semibold text-white">5 preguntas</span> basadas en el método STAR
+                      <span className="font-semibold text-white">5 preguntas</span> basadas en la entrevista de interés
                     </p>
                   </div>
 
