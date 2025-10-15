@@ -30,7 +30,7 @@ export function InterviewInit() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 lg:p-8">
+    <div className="min-h-screen pt-4 pb-12 px-6 lg:px-8">
       <InterviewInitCard
         userName={userName}
         interviewTypes={interviewTypes}
