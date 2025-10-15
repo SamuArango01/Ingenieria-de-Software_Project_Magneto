@@ -16,6 +16,10 @@ export function InterviewSession() {
   const [currentQuestion, setCurrentQuestion] = useState('');
   const [questionHistory, setQuestionHistory] = useState<string[]>([]);
 
+  // Calcular tiempo total restante
+  const TOTAL_TIME = TOTAL_QUESTIONS * TIME_PER_QUESTION; // 5 preguntas * 120 segundos = 600 segundos (10 minutos)
+  const totalTimeRemaining = Math.max(0, TOTAL_TIME - elapsedTime);
+
   const { isRecording, audioBlob, startRecording, stopRecording, resetRecording } = useAudioRecorder();
   const { processAudio, isLoading: isProcessing } = useProcessAudio();
 
@@ -117,7 +121,7 @@ export function InterviewSession() {
         currentQuestion={currentQuestion}
         questionNumber={currentQuestionNumber}
         totalQuestions={TOTAL_QUESTIONS}
-        totalElapsedTime={elapsedTime}
+        totalElapsedTime={totalTimeRemaining}
         questionTimeLeft={questionTimeLeft}
         isRecording={isRecording}
         onStartRecording={handleStartRecording}

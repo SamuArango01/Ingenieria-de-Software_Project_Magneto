@@ -11,14 +11,20 @@ export function useQuestionTimer({ initialTime, onTimeUp }: UseQuestionTimerProp
   const [timeLeft, setTimeLeft] = useState(initialTime);
   const [isActive, setIsActive] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const onTimeUpRef = useRef(onTimeUp);
+
+  // Mantener la referencia actualizada
+  useEffect(() => {
+    onTimeUpRef.current = onTimeUp;
+  }, [onTimeUp]);
 
   useEffect(() => {
-    if (isActive && timeLeft > 0) {
+    if (isActive) {
       intervalRef.current = setInterval(() => {
         setTimeLeft((prev) => {
           if (prev <= 1) {
             setIsActive(false);
-            onTimeUp?.();
+            onTimeUpRef.current?.();
             return 0;
           }
           return prev - 1;
@@ -36,7 +42,7 @@ export function useQuestionTimer({ initialTime, onTimeUp }: UseQuestionTimerProp
         clearInterval(intervalRef.current);
       }
     };
-  }, [isActive, timeLeft, onTimeUp]);
+  }, [isActive]);
 
   const start = () => setIsActive(true);
   const pause = () => setIsActive(false);
