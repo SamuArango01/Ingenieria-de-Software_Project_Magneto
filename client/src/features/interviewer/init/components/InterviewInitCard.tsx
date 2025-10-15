@@ -28,9 +28,9 @@ export function InterviewInitCard({
   return (
     <Card className="w-full max-w-5xl mx-auto shadow-2xl bg-gray-900">
       <CardContent className="p-8">
-        <div className="flex flex-col lg:flex-row gap-8 items-center">
+        <div className="flex flex-col lg:flex-row gap-6 items-center justify-between">
           {/* Left side - Configuration Card */}
-          <Card className="w-full lg:w-[500px] border-2 border-gray-700 shadow-lg bg-gray-800">
+          <Card className="w-full lg:w-[520px] border-2 border-gray-700 shadow-lg bg-gray-800">
             <CardHeader className="bg-gray-800 border-b border-gray-700">
               <CardTitle className="flex items-center gap-2 text-xl text-green-400">
                 <User className="w-5 h-5" />
@@ -59,7 +59,7 @@ export function InterviewInitCard({
                       value={selectedTypeId?.toString() ?? 'general'}
                       onValueChange={(value) => onTypeSelect(value === 'general' ? null : Number(value))}
                     >
-                      <SelectTrigger id="interview-type" className="border-blue-500/30 focus:ring-blue-500 bg-gray-800 text-white">
+                      <SelectTrigger id="interview-type" className="border-blue-500/30 focus:ring-blue-500 bg-gray-800 text-white w-full">
                         <SelectValue placeholder="Selecciona un tipo de entrevista" />
                       </SelectTrigger>
                       <SelectContent className="bg-gray-800 border-gray-700">
