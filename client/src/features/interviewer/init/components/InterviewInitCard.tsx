@@ -3,6 +3,7 @@ import { Clock, User, Mic, PlayCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 
 interface InterviewInitCardProps {
   userName: string;
@@ -114,39 +115,42 @@ export function InterviewInitCard({
           </Card>
 
           {/* Right side - Info & Start Card */}
-          <Card className="w-full lg:w-[340px] border-2 border-gray-700 shadow-lg bg-gray-800">
-            <CardContent className="p-6 space-y-6">
+          <Card className="w-full lg:w-[380px] border-2 border-gray-700 shadow-lg bg-gray-800 flex flex-col">
+            <CardHeader className="bg-gray-800 border-b border-gray-700">
+              <CardTitle className="flex items-center gap-2 text-xl text-blue-400">
+                <PlayCircle className="w-5 h-5" />
+                Iniciar Entrevista
+              </CardTitle>
+              <CardDescription className="text-gray-400">Comienza tu práctica ahora</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-6 flex-1 flex flex-col">
               {/* General Info Section */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 pb-2 border-b border-gray-700">
-                  <div className="w-2 h-2 rounded-full bg-blue-400"></div>
-                  <h3 className="text-lg font-bold text-blue-400">Información General</h3>
-                </div>
-
-                <div className="space-y-3 text-sm">
-                  <div className="flex items-start gap-3 bg-gray-700/30 rounded-lg p-3">
-                    <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5"></div>
+              <div className="space-y-3 bg-gray-700/50 rounded-lg p-4 border border-blue-500/30 flex-1">
+                <Label className="text-blue-400 text-sm font-semibold">Información General</Label>
+                <div className="space-y-2.5 text-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-blue-400"></div>
                     <p className="text-gray-300">
                       <span className="font-semibold text-white">5 preguntas</span> basadas en la entrevista de interés
                     </p>
                   </div>
 
-                  <div className="flex items-start gap-3 bg-gray-700/30 rounded-lg p-3">
-                    <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5"></div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-blue-400"></div>
                     <p className="text-gray-300">
                       Evaluación en <span className="font-semibold text-white">tiempo real</span>
                     </p>
                   </div>
 
-                  <div className="flex items-start gap-3 bg-gray-700/30 rounded-lg p-3">
-                    <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5"></div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-blue-400"></div>
                     <p className="text-gray-300">
                       Retroalimentación <span className="font-semibold text-white">personalizada</span>
                     </p>
                   </div>
 
-                  <div className="flex items-start gap-3 bg-gray-700/30 rounded-lg p-3">
-                    <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5"></div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-blue-400"></div>
                     <p className="text-gray-300">
                       Análisis de <span className="font-semibold text-white">fluidez verbal</span>
                     </p>
@@ -155,12 +159,12 @@ export function InterviewInitCard({
               </div>
 
               {/* Start Button */}
-              <button
+              <Button
                 onClick={onStartInterview}
                 disabled={isStarting}
-                className="w-full relative group px-6 py-6 rounded-xl bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 hover:from-blue-500 hover:via-blue-600 hover:to-blue-700 text-white shadow-xl hover:shadow-blue-500/50 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed border-2 border-blue-500/30 hover:border-blue-400/50 hover:scale-105"
+                className="w-full h-auto min-h-[180px] relative group px-6 py-6 rounded-xl bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 hover:from-blue-500 hover:via-blue-600 hover:to-blue-700 text-white shadow-xl hover:shadow-blue-500/50 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed border-2 border-blue-500/30 hover:border-blue-400/50 hover:scale-105"
               >
-                <div className="flex flex-col items-center justify-center gap-3">
+                <div className="flex flex-col items-center justify-center gap-3 h-full">
                   {isStarting ? (
                     <>
                       <div className="w-10 h-10 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -168,8 +172,8 @@ export function InterviewInitCard({
                     </>
                   ) : (
                     <>
-                      <div className="relative">
-                        <PlayCircle className="w-16 h-16 group-hover:scale-110 transition-transform drop-shadow-lg" strokeWidth={2} />
+                      <div className="relative flex items-center justify-center">
+                        <PlayCircle className="w-20 h-20 group-hover:scale-110 transition-transform drop-shadow-lg" strokeWidth={2} />
                         <div className="absolute inset-0 bg-blue-400/20 blur-xl rounded-full group-hover:bg-blue-300/40 transition-all"></div>
                       </div>
                       <div className="text-center space-y-1">
@@ -179,7 +183,7 @@ export function InterviewInitCard({
                     </>
                   )}
                 </div>
-              </button>
+              </Button>
             </CardContent>
           </Card>
         </div>

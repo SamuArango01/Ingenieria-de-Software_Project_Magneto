@@ -2,6 +2,10 @@
 
 import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 
+// Constantes de la entrevista
+export const TOTAL_QUESTIONS = 5;
+export const TIME_PER_QUESTION = 120; // en segundos (2 minutos)
+
 interface InterviewContextState {
   // Interview data
   interviewId: number | null;
