@@ -16,7 +16,6 @@ export interface CandidateMetrics {
 
 export interface ProcessAudioResponse {
   text: string;
-  translate: string;
   aiResponse: string;
   candidateMetrics: CandidateMetrics;
   success: boolean;

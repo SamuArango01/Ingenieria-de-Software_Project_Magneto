@@ -179,16 +179,12 @@ Keep it conversational, engaging, and appropriate for the difficulty level.`;
                 }
             }
 
-            const translatePrompt = `Translate the following Spanish text to English. Only return the translation, no additional text:
-"${transcriptedText}"`;
-            const translatedText = await generateContent(translatePrompt);
-
+            console.log("🤖 Generando respuesta IA...");
             const aiResponse = await generateContent(aiResponsePrompt);
             console.log("🤖 Respuesta IA:", aiResponse);
 
             return ok({
                 text: transcriptedText,
-                translate: translatedText,
                 aiResponse: aiResponse,
                 candidateMetrics: candidateMetrics,
                 success: true,
