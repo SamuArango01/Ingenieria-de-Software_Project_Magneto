@@ -33,19 +33,12 @@ export class InterviewController {
             const { candidateName, interviewTypeId, difficultyLevel = 'junior' } = req.body;
 
             if (!candidateName) {
-                res.status(400).json({ 
+                res.status(400).json({
                     success: false,
-                    message: 'El nombre del candidato es requerido' 
+                    message: 'El nombre del candidato es requerido'
                 });
                 return;
             }
-
-            console.log("Iniciando entrevista:", {
-                clerkUserId,
-                candidateName,
-                interviewTypeId,
-                difficultyLevel
-            });
 
             const result = await this.interviewService.startStarInterview(
                 candidateName,
@@ -56,12 +49,6 @@ export class InterviewController {
 
             result.match(
                 (data) => {
-                    console.log("Entrevista iniciada correctamente:", {
-                        interviewId: data.interviewId,
-                        initialMessageLength: data.initialMessage?.length,
-                        success: data.success
-                    });
-
                     res.json({
                         success: true,
                         data: {
@@ -75,14 +62,14 @@ export class InterviewController {
                 (error) => {
                     console.error("Error en startStarInterview:", error);
                     if (error.type === 'ValidationError') {
-                        res.status(400).json({ 
+                        res.status(400).json({
                             success: false,
-                            message: error.message 
+                            message: error.message
                         });
                     } else {
-                        res.status(500).json({ 
+                        res.status(500).json({
                             success: false,
-                            message: 'Error interno del servidor' 
+                            message: 'Error interno del servidor'
                         });
                     }
                 }
