@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { InterviewInitCard } from './components/InterviewInitCard';
@@ -25,9 +25,11 @@ export function InterviewInit() {
   };
 
   // Redirigir a la sesión cuando se crea exitosamente
-  if (isSuccess && data) {
-    router.push(`/entrevistador/session`);
-  }
+  useEffect(() => {
+    if (isSuccess && data) {
+      router.push(`/entrevistador/session`);
+    }
+  }, [isSuccess, data, router]);
 
   return (
     <div className="min-h-screen pt-4 pb-12 px-6 lg:px-8">

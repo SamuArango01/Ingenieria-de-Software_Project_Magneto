@@ -27,7 +27,7 @@ export function InterviewInitCard({
   const selectedType = interviewTypes.find((t) => t.id === selectedTypeId);
 
   return (
-    <Card className="w-full max-w-5xl mx-auto shadow-2xl bg-gray-900">
+    <Card className="w-full max-w-5xl mx-auto shadow-2xl bg-gray-800/50 backdrop-blur-sm border-gray-700">
       <CardContent className="p-10 lg:p-12">
         <div className="flex flex-col lg:flex-row gap-8 items-center justify-between px-4 lg:px-6">
           {/* Left side - Configuration Card */}
@@ -162,9 +162,10 @@ export function InterviewInitCard({
               <Button
                 onClick={onStartInterview}
                 disabled={isStarting}
-                className="w-full h-auto min-h-[180px] relative group px-6 py-6 rounded-xl bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 hover:from-blue-500 hover:via-blue-600 hover:to-blue-700 text-white shadow-xl hover:shadow-blue-500/50 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed border-2 border-blue-500/30 hover:border-blue-400/50 hover:scale-105"
+                size="lg"
+                className="w-full h-auto relative group px-5 py-5 rounded-xl bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 hover:from-blue-500 hover:via-blue-600 hover:to-blue-700 text-white shadow-xl hover:shadow-blue-500/50 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed border-2 border-blue-500/30 hover:border-blue-400/50 hover:scale-105"
               >
-                <div className="flex flex-col items-center justify-center gap-3 h-full">
+                <div className="flex flex-col items-center justify-center gap-2.5">
                   {isStarting ? (
                     <>
                       <div className="w-10 h-10 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -172,8 +173,8 @@ export function InterviewInitCard({
                     </>
                   ) : (
                     <>
-                      <div className="relative flex items-center justify-center">
-                        <PlayCircle className="w-20 h-20 group-hover:scale-110 transition-transform drop-shadow-lg" strokeWidth={2} />
+                      <div className="relative flex items-center justify-center w-20 h-20">
+                        <PlayCircle style={{ width: '80px', height: '80px' }} className="group-hover:scale-110 transition-transform drop-shadow-lg" strokeWidth={2.5} />
                         <div className="absolute inset-0 bg-blue-400/20 blur-xl rounded-full group-hover:bg-blue-300/40 transition-all"></div>
                       </div>
                       <div className="text-center space-y-1">
