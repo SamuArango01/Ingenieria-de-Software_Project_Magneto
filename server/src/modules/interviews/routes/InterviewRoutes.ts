@@ -30,9 +30,9 @@ router.post('/email', (req, res) =>
     interviewController.sendEmail(req, res)
 );
 
-//  Ruta para evaluar nivel
-router.post('/evaluate-level', (req, res) => 
-    interviewController.evaluateLevel(req, res)
+//  Ruta para evaluar entrevista
+router.post('/evaluate', (req, res) =>
+    interviewController.evaluateInterview(req, res)
 );
 
 export default router;

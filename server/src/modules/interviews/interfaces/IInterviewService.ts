@@ -41,13 +41,11 @@ export interface IInterviewService {
         success: boolean 
     }, ValidationError>>;
 
-    evaluateLevel(
+    evaluateInterview(
         interviewHistory: Array<{ user: string; ai: string }>,
-        candidateMetricsHistory: any[],
-        currentLevel: string
-    ): Promise<Result<{ 
-        canAdvance: boolean; 
-        recommendedLevel: string;
+        candidateMetricsHistory: any[]
+    ): Promise<Result<{
+        wouldPass: boolean;
         score: number;
         feedback: string;
     }, ValidationError>>;

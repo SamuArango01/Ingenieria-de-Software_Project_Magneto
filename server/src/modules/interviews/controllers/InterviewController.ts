@@ -227,72 +227,57 @@ export class InterviewController {
         }
     }
 
-    async evaluateLevel(req: Request, res: Response): Promise<void> {
+    async evaluateInterview(req: Request, res: Response): Promise<void> {
         try {
             const { userId } = getAuth(req);
             if (!userId) {
-                res.status(401).json({ 
+                res.status(401).json({
                     success: false,
-                    message: 'Unauthorized' 
+                    message: 'Unauthorized'
                 });
                 return;
             }
 
-            const { interviewHistory, candidateMetricsHistory, currentLevel = 'junior' } = req.body;
-
-            console.log("Evaluando nivel:", {
-                userId,
-                interviewHistoryLength: interviewHistory?.length || 0,
-                candidateMetricsHistoryLength: candidateMetricsHistory?.length || 0,
-                currentLevel
-            });
+            const { interviewHistory, candidateMetricsHistory } = req.body;
 
             if (!interviewHistory || !Array.isArray(interviewHistory)) {
-                res.status(400).json({ 
+                res.status(400).json({
                     success: false,
-                    message: 'El historial de entrevista es requerido y debe ser un array' 
+                    message: 'El historial de entrevista es requerido y debe ser un array'
                 });
                 return;
             }
 
-            const result = await this.interviewService.evaluateLevel(
+            const result = await this.interviewService.evaluateInterview(
                 interviewHistory,
-                candidateMetricsHistory || [],
-                currentLevel
+                candidateMetricsHistory || []
             );
 
             result.match(
                 (data) => {
-                    console.log("Nivel evaluado correctamente:", {
-                        canAdvance: data.canAdvance,
-                        recommendedLevel: data.recommendedLevel,
-                        score: data.score,
-                        feedbackLength: data.feedback?.length
-                    });
-                    
                     res.json(data);
                 },
                 (error) => {
-                    console.error("Error en evaluateLevel:", error);
+                    console.error("Error en evaluateInterview:", error);
                     if (error.type === 'ValidationError') {
-                        res.status(400).json({ 
+                        res.status(400).json({
                             success: false,
-                            message: error.message 
+                            message: error.message
                         });
                     } else {
-                        res.status(500).json({ 
+                        res.status(500).json({
                             success: false,
-                            message: 'Internal server error' 
+                            message: 'Internal server error'
                         });
                     }
                 }
             );
 
         } catch (error) {
-            console.error("Error evaluating level:", error);
+            console.error("Error evaluating interview:", error);
             res.status(500).json({
                 success: false,
-                error: "Error al evaluar el nivel",
+                error: "Error al evaluar la entrevista",
                 details: error instanceof Error ? error.message : "Unknown error",
             });
         }

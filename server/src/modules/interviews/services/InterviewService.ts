@@ -197,14 +197,12 @@ Keep it conversational, engaging, and appropriate for the difficulty level.`;
         }
     }
 
-   
-    async evaluateLevel(
+
+    async evaluateInterview(
         interviewHistory: Array<{ user: string; ai: string }>,
-        candidateMetricsHistory: any[],
-        currentLevel: string
-    ): Promise<Result<{ 
-        canAdvance: boolean; 
-        recommendedLevel: string;
+        candidateMetricsHistory: any[]
+    ): Promise<Result<{
+        wouldPass: boolean;
         score: number;
         feedback: string;
     }, ValidationError>> {
@@ -213,82 +211,50 @@ Keep it conversational, engaging, and appropriate for the difficulty level.`;
                 return err({ type: 'ValidationError', message: "No interview history provided" });
             }
 
-            console.log("🔍 Evaluando nivel completo:", {
-                currentLevel,
-                interviewHistoryLength: interviewHistory.length,
-                candidateMetricsHistoryLength: candidateMetricsHistory?.length || 0
-            });
+            // Calidad del contenido (60%)
+            const contentScore = await this.evaluateContentQuality(interviewHistory);
 
-            //Calidad del contenido (60%)
-            const contentScore = await this.evaluateContentQuality(interviewHistory, currentLevel);
-            
             // Habilidades vocales (40%)
             const vocalScore = this.calculateVocalScore(candidateMetricsHistory);
-            
+
             // Puntuación global combinada
             const overallScore = Math.round((contentScore * 0.6) + (vocalScore * 0.4));
-            
-            console.log("📊 Puntuaciones de evaluación:", {
-                contentScore,
-                vocalScore,
-                overallScore,
-                currentLevel
-            });
 
-            const levelConfig = this.DIFFICULTY_LEVELS[currentLevel];
-            const canAdvance = levelConfig ? overallScore >= levelConfig.requiredScore : false;
-       
-            const levels = ['junior', 'mid', 'senior'];
-            const currentIndex = levels.indexOf(currentLevel);
-            const recommendedLevel = canAdvance && currentIndex < levels.length - 1 
-                ? levels[currentIndex + 1] 
-                : currentLevel;
+            // Si el puntaje es mayor o igual a 70, aprobaría
+            const wouldPass = overallScore >= 70;
 
-            const feedback = await this.generateComprehensiveFeedback(
+            const feedback = await this.generateFeedback(
                 interviewHistory,
                 candidateMetricsHistory,
-                currentLevel,
                 overallScore,
-                canAdvance,
-                recommendedLevel,
+                wouldPass,
                 contentScore,
                 vocalScore
             );
 
-            console.log("🎯 Resultado evaluación final:", {
-                canAdvance,
-                recommendedLevel,
-                overallScore,
-                contentScore,
-                vocalScore,
-                currentLevel
-            });
-
             return ok({
-                canAdvance,
-                recommendedLevel,
+                wouldPass,
                 score: overallScore,
                 feedback
             });
 
         } catch (error) {
-            console.error('❌ Error evaluating level:', error);
-            return err({ 
-                type: 'ValidationError', 
-                message: error instanceof Error ? error.message : 'Error evaluating level' 
+            return err({
+                type: 'ValidationError',
+                message: error instanceof Error ? error.message : 'Error evaluating interview'
             });
         }
     }
 
 
-    private async evaluateContentQuality(interviewHistory: any[], currentLevel: string): Promise<number> {
+    private async evaluateContentQuality(interviewHistory: any[]): Promise<number> {
         try {
             const conversation = interviewHistory
                 .map((turn, i) => `Pregunta ${i + 1}: ${turn.ai}\nRespuesta: ${turn.user}`)
                 .join("\n\n");
 
             const evaluationPrompt = `
-Evalúa la calidad de las respuestas del candidato en una entrevista de nivel ${currentLevel}.
+Evalúa la calidad de las respuestas del candidato en esta entrevista.
 
 CONVERSACIÓN COMPLETA:
 ${conversation}
@@ -301,24 +267,17 @@ Proporciona una puntuación del 0-100 considerando CRITERIOS ESPECÍFICOS:
 4. EJEMPLOS (15%): ¿Incluye ejemplos concretos o experiencias relevantes?
 5. COHERENCIA (15%): ¿Mantiene consistencia en sus argumentos?
 
-Nivel esperado: ${currentLevel}
 Devuelve SOLO el número de la puntuación, nada más.
             `;
 
             const scoreText = await generateContent(evaluationPrompt);
-            const score = parseInt(scoreText.trim()) || 70; // Default si falla
+            const score = parseInt(scoreText.trim()) || 70;
             const finalScore = Math.min(100, Math.max(0, score));
-            
-            console.log("📝 Evaluación de contenido:", {
-                rawScore: scoreText,
-                finalScore,
-                currentLevel
-            });
 
             return finalScore;
         } catch (error) {
             console.error("❌ Error evaluando contenido:", error);
-            return 70; // Puntuación por defecto en caso de error
+            return 70;
         }
     }
 
@@ -352,14 +311,12 @@ Devuelve SOLO el número de la puntuación, nada más.
         }
     }
 
-    //  Generar feedback integral y personalizado
-    private async generateComprehensiveFeedback(
+    // Generar feedback personalizado
+    private async generateFeedback(
         interviewHistory: any[],
         candidateMetricsHistory: any[],
-        currentLevel: string,
         overallScore: number,
-        canAdvance: boolean,
-        recommendedLevel: string,
+        wouldPass: boolean,
         contentScore: number,
         vocalScore: number
     ): Promise<string> {
@@ -368,7 +325,7 @@ Devuelve SOLO el número de la puntuación, nada más.
                 .map((turn, i) => `Pregunta ${i + 1}: ${turn.ai}\nRespuesta: ${turn.user}`)
                 .join("\n\n");
 
-            const averageMetrics = candidateMetricsHistory && candidateMetricsHistory.length > 0 
+            const averageMetrics = candidateMetricsHistory && candidateMetricsHistory.length > 0
                 ? this.calculateAverageCandidateMetrics(candidateMetricsHistory)
                 : null;
 
@@ -379,9 +336,7 @@ RESULTADOS DE EVALUACIÓN:
 - Puntuación total: ${overallScore}/100
 - Puntuación contenido: ${contentScore}/100
 - Puntuación comunicación: ${vocalScore}/100
-- Nivel actual: ${currentLevel}
-- ¿Puede avanzar?: ${canAdvance ? 'SÍ' : 'NO'}
-- Nivel recomendado: ${recommendedLevel}
+- ¿Aprobaría al candidato siendo estricto?: ${wouldPass ? 'SÍ' : 'NO'}
 
 ${averageMetrics ? `
 DESEMPEÑO VOCAL:
@@ -397,23 +352,22 @@ ${conversation}
 
 INSTRUCCIONES PARA EL FEEDBACK:
 1. Comienza con un reconocimiento del esfuerzo
-2. Explica BREVEMENTE la decisión de avance/no avance
+2. Explica BREVEMENTE la decisión (aprobar o no)
 3. Destaca 2-3 fortalezas principales
-4. Mámixo 20 palabras
 4. Señala 2-3 áreas de mejora específicas
-5. Da recomendaciones concretas para el siguiente nivel
+5. Da recomendaciones concretas
 6. Termina con un mensaje motivador
 
-Máximo 50 palabras. Lenguaje natural y constructivo.
+Máximo 300 palabras. Lenguaje natural y constructivo en español.
             `;
 
             const feedback = await generateContent(feedbackPrompt);
             return feedback;
         } catch (error) {
             console.error("❌ Error generando feedback:", error);
-            return canAdvance ? 
-                `¡Felicidades! Has obtenido ${overallScore}/100 puntos y puedes avanzar al nivel ${recommendedLevel}. Continúa desarrollando tus habilidades de comunicación y profundizando en tus respuestas.` :
-                `Has obtenido ${overallScore}/100 puntos. Para avanzar al siguiente nivel necesitas mejorar tanto el contenido de tus respuestas como tu comunicación verbal. Sigue practicando!`;
+            return wouldPass ?
+                `¡Felicidades! Has obtenido ${overallScore}/100 puntos. Tu desempeño ha sido sólido. Continúa desarrollando tus habilidades de comunicación y profundizando en tus respuestas.` :
+                `Has obtenido ${overallScore}/100 puntos. Para aprobar necesitas mejorar tanto el contenido de tus respuestas como tu comunicación verbal. Sigue practicando!`;
         }
     }
 
