@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
+import type { CandidateMetrics } from '../session/models/session.model';
 
 // Constantes de la entrevista
 export const TOTAL_QUESTIONS = 5;
@@ -12,6 +13,10 @@ interface InterviewContextState {
   interviewTypeId: number | null;
   candidateName: string | null;
   initialMessage: string | null;
+
+  // Interview history
+  interviewHistory: Array<{ user: string; ai: string }>;
+  candidateMetricsHistory: CandidateMetrics[];
 
   // Timer
   elapsedTime: number; // en segundos
@@ -28,6 +33,7 @@ interface InterviewContextState {
   pauseTimer: () => void;
   resumeTimer: () => void;
   resetInterview: () => void;
+  addInterviewTurn: (userAnswer: string, aiQuestion: string, metrics: CandidateMetrics) => void;
 }
 
 const InterviewContext = createContext<InterviewContextState | undefined>(undefined);
@@ -37,6 +43,8 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
   const [interviewTypeId, setInterviewTypeId] = useState<number | null>(null);
   const [candidateName, setCandidateName] = useState<string | null>(null);
   const [initialMessage, setInitialMessage] = useState<string | null>(null);
+  const [interviewHistory, setInterviewHistory] = useState<Array<{ user: string; ai: string }>>([]);
+  const [candidateMetricsHistory, setCandidateMetricsHistory] = useState<CandidateMetrics[]>([]);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
 
@@ -93,12 +101,19 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
     setInterviewTypeId(null);
     setCandidateName(null);
     setInitialMessage(null);
+    setInterviewHistory([]);
+    setCandidateMetricsHistory([]);
     setElapsedTime(0);
     setIsTimerRunning(false);
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
+  }, []);
+
+  const addInterviewTurn = useCallback((userAnswer: string, aiQuestion: string, metrics: CandidateMetrics) => {
+    setInterviewHistory((prev) => [...prev, { user: userAnswer, ai: aiQuestion }]);
+    setCandidateMetricsHistory((prev) => [...prev, metrics]);
   }, []);
 
   return (
@@ -108,6 +123,8 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
         interviewTypeId,
         candidateName,
         initialMessage,
+        interviewHistory,
+        candidateMetricsHistory,
         elapsedTime,
         isTimerRunning,
         startInterview,
@@ -115,6 +132,7 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
         pauseTimer,
         resumeTimer,
         resetInterview,
+        addInterviewTurn,
       }}
     >
       {children}

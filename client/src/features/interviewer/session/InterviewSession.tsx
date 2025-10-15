@@ -10,7 +10,7 @@ import { useProcessAudio } from './hooks/useProcessAudio';
 
 export function InterviewSession() {
   const router = useRouter();
-  const { interviewId, initialMessage, elapsedTime, pauseTimer, resumeTimer, endInterview } = useInterviewContext();
+  const { interviewId, initialMessage, elapsedTime, pauseTimer, resumeTimer, endInterview, addInterviewTurn } = useInterviewContext();
 
   const [currentQuestionNumber, setCurrentQuestionNumber] = useState(1);
   const [currentQuestion, setCurrentQuestion] = useState('');
@@ -72,6 +72,9 @@ export function InterviewSession() {
       if (result?.success) {
         // Guardar la pregunta actual en el historial
         setQuestionHistory((prev) => [...prev, currentQuestion]);
+
+        // Guardar en el contexto: respuesta del usuario + pregunta del AI + métricas
+        addInterviewTurn(result.text, currentQuestion, result.candidateMetrics);
 
         // Verificar si hay más preguntas
         if (currentQuestionNumber < TOTAL_QUESTIONS) {
