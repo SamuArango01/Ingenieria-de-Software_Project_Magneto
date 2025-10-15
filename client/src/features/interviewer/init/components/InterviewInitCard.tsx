@@ -27,8 +27,8 @@ export function InterviewInitCard({
 
   return (
     <Card className="w-full max-w-5xl mx-auto shadow-2xl bg-gray-900">
-      <CardContent className="p-8">
-        <div className="flex flex-col lg:flex-row gap-6 items-center justify-between">
+      <CardContent className="p-10 lg:p-12">
+        <div className="flex flex-col lg:flex-row gap-8 items-center justify-between px-4 lg:px-6">
           {/* Left side - Configuration Card */}
           <Card className="w-full lg:w-[520px] border-2 border-gray-700 shadow-lg bg-gray-800">
             <CardHeader className="bg-gray-800 border-b border-gray-700">
