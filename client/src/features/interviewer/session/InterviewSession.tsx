@@ -10,7 +10,7 @@ import { useProcessAudio } from './hooks/useProcessAudio';
 
 export function InterviewSession() {
   const router = useRouter();
-  const { interviewId, elapsedTime, pauseTimer, resumeTimer, endInterview } = useInterviewContext();
+  const { interviewId, initialMessage, elapsedTime, pauseTimer, resumeTimer, endInterview } = useInterviewContext();
 
   const [currentQuestionNumber, setCurrentQuestionNumber] = useState(1);
   const [currentQuestion, setCurrentQuestion] = useState('');
@@ -47,12 +47,12 @@ export function InterviewSession() {
 
   // Iniciar el timer de la primera pregunta al cargar
   useEffect(() => {
-    if (interviewId && currentQuestionNumber === 1) {
-      // Simulación: obtener primera pregunta del backend
-      setCurrentQuestion('Cuéntame sobre tu experiencia profesional más reciente.');
+    if (interviewId && initialMessage && currentQuestionNumber === 1 && !currentQuestion) {
+      // Usar la pregunta inicial generada por el backend
+      setCurrentQuestion(initialMessage);
       startQuestionTimer();
     }
-  }, [interviewId, currentQuestionNumber, startQuestionTimer]);
+  }, [interviewId, initialMessage, currentQuestionNumber, currentQuestion, startQuestionTimer]);
 
   // Procesar audio cuando se detiene la grabación
   useEffect(() => {
