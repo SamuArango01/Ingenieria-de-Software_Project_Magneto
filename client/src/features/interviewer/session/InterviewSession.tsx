@@ -67,11 +67,7 @@ export function InterviewSession() {
     pauseTimer();
 
     try {
-      const result = await processAudio({
-        audioBlob,
-        interviewId,
-        questionNumber: currentQuestionNumber,
-      });
+      const result = await processAudio(audioBlob);
 
       if (result?.success) {
         // Guardar la pregunta actual en el historial
@@ -81,7 +77,7 @@ export function InterviewSession() {
         if (currentQuestionNumber < TOTAL_QUESTIONS) {
           // Avanzar a la siguiente pregunta
           setCurrentQuestionNumber((prev) => prev + 1);
-          // Simulación: obtener siguiente pregunta (en producción vendría del backend)
+          // La siguiente pregunta viene en aiResponse del backend
           setCurrentQuestion(result.aiResponse);
           resetQuestionTimer(TIME_PER_QUESTION);
           startQuestionTimer();

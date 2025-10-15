@@ -10,11 +10,13 @@ import type {
  * Procesa el audio enviado por el candidato
  */
 export const processAudio = async (
-  audioFile: File,
+  audioBlob: Blob,
   interviewTypeId?: number
 ): Promise<ProcessAudioResponse> => {
   try {
     const formData = new FormData();
+    // Convertir Blob a File
+    const audioFile = new File([audioBlob], 'audio.webm', { type: 'audio/webm' });
     formData.append('audio', audioFile);
 
     if (interviewTypeId) {

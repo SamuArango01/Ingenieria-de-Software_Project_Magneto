@@ -8,15 +8,15 @@ export function useProcessAudio() {
   const { interviewTypeId } = useInterviewContext();
 
   const mutation = useMutation({
-    mutationFn: (audioFile: File) =>
-      processAudio(audioFile, interviewTypeId ?? undefined),
+    mutationFn: (audioBlob: Blob) =>
+      processAudio(audioBlob, interviewTypeId ?? undefined),
     onError: (error) => {
       console.error('Error al procesar audio:', error);
     },
   });
 
   return {
-    processAudio: mutation.mutate,
+    processAudio: mutation.mutateAsync,
     isLoading: mutation.isPending,
     isError: mutation.isError,
     error: mutation.error,
