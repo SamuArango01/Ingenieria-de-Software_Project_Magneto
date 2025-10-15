@@ -89,8 +89,6 @@ async startStarInterview(
         });
         const savedInterview = await this.interviewRepository.save(newInterview);
 
-        console.log(`📝 Entrevista #${savedInterview.id} guardada para el usuario ${userId}`);
-
         const levelConfig = this.DIFFICULTY_LEVELS[difficultyLevel] || this.DIFFICULTY_LEVELS.junior;
         
         let prompt = `Eres un entrevistador profesional para una entrevista de nivel ${levelConfig.name}. 
@@ -110,10 +108,8 @@ EN ESPAÑOL. Máximo 120 palabras.`;
         if (interviewTypeId) {
             const effectiveUserId = userId || 'system';
             const interviewTypeResult = await this.interviewTypeService.getInterviewTypeById(effectiveUserId, interviewTypeId);
-            
+
             if (interviewTypeResult.isOk() && interviewTypeResult.value?.description) {
-                console.log("🎯 Tipo de entrevista encontrado:", interviewTypeResult.value.name);
-                
                 prompt = `Eres un entrevistador profesional para un puesto de nivel ${levelConfig.name}. 
                 
 Contexto: ${levelConfig.description}
