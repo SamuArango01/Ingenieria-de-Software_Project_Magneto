@@ -41,9 +41,9 @@ export function InterviewSessionCard({
   };
 
   return (
-    <Card className="w-full max-w-5xl mx-auto shadow-2xl bg-gray-900">
+    <Card className="w-full max-w-5xl mx-auto shadow-2xl bg-gray-800/50 backdrop-blur-sm border-gray-700">
       <CardContent className="p-10 lg:p-12">
-        <div className="flex flex-col lg:flex-row gap-8 items-start justify-between px-4 lg:px-6">
+        <div className="flex flex-col lg:flex-row gap-8 items-stretch justify-between px-4 lg:px-6">
           {/* Left side - Question Card */}
           <div className="w-full lg:w-[580px] space-y-4">
             {/* Question Counter */}
@@ -123,13 +123,13 @@ export function InterviewSessionCard({
             <Button
               onClick={isRecording ? onStopRecording : onStartRecording}
               disabled={isProcessing}
-              className={`relative group w-64 h-64 rounded-full shadow-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed border-4 ${
+              className={`relative group w-64 h-64 rounded-full shadow-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed border-4 p-0 ${
                 isRecording
                   ? 'bg-gradient-to-br from-red-500 via-red-600 to-red-700 border-red-400 animate-pulse shadow-red-500/50'
                   : 'bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 hover:from-blue-500 hover:via-blue-600 hover:to-blue-700 border-blue-500/30 hover:border-blue-400/50 hover:scale-105 shadow-blue-500/30'
               }`}
             >
-              <div className="flex flex-col items-center justify-center gap-4">
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
                 {isProcessing ? (
                   <>
                     <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -137,8 +137,8 @@ export function InterviewSessionCard({
                   </>
                 ) : isRecording ? (
                   <>
-                    <div className="relative">
-                      <MicOff className="w-24 h-24 text-white drop-shadow-lg" strokeWidth={2} />
+                    <div className="relative flex items-center justify-center w-24 h-24">
+                      <MicOff style={{ width: '96px', height: '96px' }} className="text-white drop-shadow-lg" strokeWidth={2.5} />
                       <div className="absolute inset-0 bg-red-300/30 blur-2xl rounded-full"></div>
                     </div>
                     <div className="text-center space-y-1">
@@ -148,8 +148,8 @@ export function InterviewSessionCard({
                   </>
                 ) : (
                   <>
-                    <div className="relative">
-                      <Mic className="w-24 h-24 text-white group-hover:scale-110 transition-transform drop-shadow-lg" strokeWidth={2} />
+                    <div className="relative flex items-center justify-center w-24 h-24">
+                      <Mic style={{ width: '96px', height: '96px' }} className="text-white group-hover:scale-110 transition-transform drop-shadow-lg" strokeWidth={2.5} />
                       <div className="absolute inset-0 bg-blue-400/20 blur-xl rounded-full group-hover:bg-blue-300/40 transition-all"></div>
                     </div>
                     <div className="text-center space-y-1">
