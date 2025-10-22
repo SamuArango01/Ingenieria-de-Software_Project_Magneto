@@ -4,24 +4,36 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { InterviewSessionCard } from './components/InterviewSessionCard';
 import { useInterviewContext, TOTAL_QUESTIONS, TIME_PER_QUESTION } from '../contexts/InterviewContext';
-import { useAudioRecorder } from './hooks/useAudioRecorder';
+import { useSocketAudioRecorder } from './hooks/useSocketAudioRecorder';
 import { useQuestionTimer } from './hooks/useQuestionTimer';
-import { useProcessAudio } from './hooks/useProcessAudio';
 
 export function InterviewSession() {
   const router = useRouter();
-  const { interviewId, initialMessage, elapsedTime, pauseTimer, resumeTimer, endInterview, addInterviewTurn } = useInterviewContext();
+  const { interviewId, interviewTypeId, initialMessage, elapsedTime, pauseTimer, resumeTimer, endInterview, addInterviewTurn } = useInterviewContext();
 
   const [currentQuestionNumber, setCurrentQuestionNumber] = useState(1);
   const [currentQuestion, setCurrentQuestion] = useState('');
   const [questionHistory, setQuestionHistory] = useState<string[]>([]);
 
   // Calcular tiempo total restante
-  const TOTAL_TIME = TOTAL_QUESTIONS * TIME_PER_QUESTION; // 5 preguntas * 120 segundos = 600 segundos (10 minutos)
+  const TOTAL_TIME = TOTAL_QUESTIONS * TIME_PER_QUESTION;
   const totalTimeRemaining = Math.max(0, TOTAL_TIME - elapsedTime);
 
-  const { isRecording, audioBlob, startRecording, stopRecording, resetRecording } = useAudioRecorder();
-  const { processAudio, isLoading: isProcessing } = useProcessAudio();
+  // Usa Socket.IO en lugar de REST API
+  const {
+    isRecording,
+    isProcessing,
+    processingStep,
+    result,
+    error,
+    startRecording,
+    stopRecording,
+    reset,
+    isConnected
+  } = useSocketAudioRecorder({
+    interviewTypeId: interviewTypeId || undefined,
+    enabled: !!interviewId
+  });
 
   const {
     timeLeft: questionTimeLeft,
@@ -54,48 +66,42 @@ export function InterviewSession() {
     }
   }, [interviewId, initialMessage, currentQuestionNumber, currentQuestion, startQuestionTimer]);
 
-  // Procesar audio cuando se detiene la grabación
+  // Procesar resultado cuando llega del socket
   useEffect(() => {
-    if (audioBlob && !isRecording) {
-      handleAudioProcessing();
-    }
-  }, [audioBlob, isRecording]);
+    if (result && result.success) {
+      pauseTimer();
 
-  const handleAudioProcessing = async () => {
-    if (!audioBlob || !interviewId) return;
+      // Guardar la pregunta actual en el historial
+      setQuestionHistory((prev) => [...prev, currentQuestion]);
 
-    pauseTimer();
+      // Guardar en el contexto: respuesta del usuario + pregunta del AI + métricas
+      addInterviewTurn(result.text, currentQuestion, result.candidateMetrics);
 
-    try {
-      const result = await processAudio(audioBlob);
-
-      if (result?.success) {
-        // Guardar la pregunta actual en el historial
-        setQuestionHistory((prev) => [...prev, currentQuestion]);
-
-        // Guardar en el contexto: respuesta del usuario + pregunta del AI + métricas
-        addInterviewTurn(result.text, currentQuestion, result.candidateMetrics);
-
-        // Verificar si hay más preguntas
-        if (currentQuestionNumber < TOTAL_QUESTIONS) {
-          // Avanzar a la siguiente pregunta
-          setCurrentQuestionNumber((prev) => prev + 1);
-          // La siguiente pregunta viene en aiResponse del backend
-          setCurrentQuestion(result.aiResponse);
-          resetQuestionTimer(TIME_PER_QUESTION);
-          startQuestionTimer();
-          resetRecording();
-          resumeTimer();
-        } else {
-          // Entrevista completada
-          handleEndInterview();
-        }
+      // Verificar si hay más preguntas
+      if (currentQuestionNumber < TOTAL_QUESTIONS) {
+        // Avanzar a la siguiente pregunta
+        setCurrentQuestionNumber((prev) => prev + 1);
+        // La siguiente pregunta viene en aiResponse del backend
+        setCurrentQuestion(result.aiResponse);
+        resetQuestionTimer(TIME_PER_QUESTION);
+        startQuestionTimer();
+        reset(); // Limpia el resultado
+        resumeTimer();
+      } else {
+        // Entrevista completada
+        handleEndInterview();
       }
-    } catch (error) {
-      console.error('Error procesando audio:', error);
+    }
+  }, [result]);
+
+  // Mostrar error si ocurre
+  useEffect(() => {
+    if (error) {
+      console.error('Error en Socket:', error);
+      alert(error);
       resumeTimer();
     }
-  };
+  }, [error]);
 
   const handleStartRecording = async () => {
     await startRecording();
