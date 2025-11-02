@@ -89,31 +89,48 @@ export class InterviewController {
         try {
             const { userId } = getAuth(req);
             if (!userId) {
-                res.status(401).json({ 
+                res.status(401).json({
                     success: false,
-                    message: 'Unauthorized' 
+                    message: 'Unauthorized'
                 });
                 return;
             }
 
             if (!req.file) {
-                res.status(400).json({ 
+                res.status(400).json({
                     success: false,
-                    error: "No audio file provided" 
+                    error: "No audio file provided"
                 });
                 return;
             }
 
-            const { interviewTypeId, difficultyLevel = 'junior' } = req.body;
+            const {
+                interviewId,
+                currentQuestion,
+                questionOrder,
+                interviewTypeId,
+                difficultyLevel = 'junior'
+            } = req.body;
+
+            if (!interviewId || !currentQuestion || questionOrder === undefined) {
+                res.status(400).json({
+                    success: false,
+                    error: "Missing required fields: interviewId, currentQuestion, or questionOrder"
+                });
+                return;
+            }
 
             const result = await this.interviewService.processAudio(
-                userId, 
-                req.file.path, 
+                userId,
+                req.file.path,
+                Number(interviewId),
+                currentQuestion,
+                Number(questionOrder),
                 interviewTypeId ? Number(interviewTypeId) : undefined,
                 difficultyLevel
             );
 
-           
+
             if (req.file && fs.existsSync(req.file.path)) {
                 fs.unlinkSync(req.file.path);
             }
@@ -125,14 +142,14 @@ export class InterviewController {
                 (error) => {
                     console.error("Error en processAudio:", error);
                     if (error.type === 'ValidationError') {
-                        res.status(400).json({ 
+                        res.status(400).json({
                             success: false,
-                            message: error.message 
+                            message: error.message
                         });
                     } else {
-                        res.status(500).json({ 
+                        res.status(500).json({
                             success: false,
-                            message: 'Internal server error' 
+                            message: 'Internal server error'
                         });
                     }
                 }
@@ -140,7 +157,7 @@ export class InterviewController {
 
         } catch (error) {
             console.error("Error processing audio:", error);
-            
+
             if (req.file && fs.existsSync(req.file.path)) {
                 fs.unlinkSync(req.file.path);
             }
@@ -238,7 +255,15 @@ export class InterviewController {
                 return;
             }
 
-            const { interviewHistory, candidateMetricsHistory } = req.body;
+            const { interviewId, interviewHistory, candidateMetricsHistory, startTime } = req.body;
+
+            if (!interviewId) {
+                res.status(400).json({
+                    success: false,
+                    message: 'Interview ID es requerido'
+                });
+                return;
+            }
 
             if (!interviewHistory || !Array.isArray(interviewHistory)) {
                 res.status(400).json({
@@ -248,9 +273,19 @@ export class InterviewController {
                 return;
             }
 
+            if (!startTime) {
+                res.status(400).json({
+                    success: false,
+                    message: 'Start time es requerido para calcular la duración'
+                });
+                return;
+            }
+
             const result = await this.interviewService.evaluateInterview(
+                Number(interviewId),
                 interviewHistory,
-                candidateMetricsHistory || []
+                candidateMetricsHistory || [],
+                new Date(startTime)
             );
 
             result.match(

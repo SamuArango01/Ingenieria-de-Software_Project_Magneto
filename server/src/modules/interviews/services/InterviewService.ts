@@ -8,6 +8,9 @@ import nodemailer from 'nodemailer';
 import { marked } from 'marked';
 import { IInterviewRepository } from '../interfaces/IInterviewRepository';
 import { InterviewRepository } from '../repositories/InterviewRepository';
+import { IInterviewQARepository } from '@/modules/interview-qa/interfaces/IInterviewQARepository';
+import { InterviewQARepository } from '@/modules/interview-qa/repositories/InterviewQARepository';
+import { InterviewEvaluationService } from '@/modules/interview-evaluations/services/InterviewEvaluationService';
 
 type ValidationError = { type: 'ValidationError'; message: string };
 type EmailError = { type: 'EmailError'; message: string };
@@ -22,7 +25,9 @@ interface DifficultyConfig {
 
 export class InterviewService implements IInterviewService {
     private interviewTypeService: InterviewTypeService;
-    private interviewRepository: IInterviewRepository; // Repositorio de entrevistas
+    private interviewRepository: IInterviewRepository;
+    private interviewQARepository: IInterviewQARepository;
+    private interviewEvaluationService: InterviewEvaluationService;
     private transporter;
 
     private readonly DIFFICULTY_LEVELS: { [key: string]: DifficultyConfig } = {
@@ -51,7 +56,9 @@ export class InterviewService implements IInterviewService {
 
     constructor() {
         this.interviewTypeService = new InterviewTypeService();
-        this.interviewRepository = new InterviewRepository(); // Instanciar el repositorio
+        this.interviewRepository = new InterviewRepository();
+        this.interviewQARepository = new InterviewQARepository();
+        this.interviewEvaluationService = new InterviewEvaluationService();
         this.transporter = nodemailer.createTransport({
             service: "gmail",
             auth: {
@@ -145,8 +152,11 @@ EN ESPAÑOL. Máximo 120 palabras.`;
 }
 
     async processAudio(
-        userId: string, 
-        audioPath: string, 
+        userId: string,
+        audioPath: string,
+        interviewId: number,
+        currentQuestion: string,
+        questionOrder: number,
         interviewTypeId?: number,
         difficultyLevel: string = 'junior'
     ): Promise<Result<any, ValidationError>> {
@@ -155,26 +165,34 @@ EN ESPAÑOL. Máximo 120 palabras.`;
             const transcriptedText = analysisResult.text;
             const candidateMetrics = analysisResult.candidateMetrics;
 
-          
+            // Guardar pregunta y respuesta en BD
+            const interviewQA = this.interviewQARepository.create({
+                interviewId,
+                question: currentQuestion,
+                answer: transcriptedText,
+                questionOrder
+            });
+            await this.interviewQARepository.save(interviewQA);
+
             const levelConfig = this.DIFFICULTY_LEVELS[difficultyLevel] || this.DIFFICULTY_LEVELS.junior;
 
             let aiResponsePrompt = `You are an AI interviewer assistant.Based on this candidate's response:
 "${transcriptedText}"
 
-Provide a brief, professional follow-up question or comment in Spanish that would be appropriate for a ${levelConfig.name} level interview. 
+Provide a brief, professional follow-up question or comment in Spanish that would be appropriate for a ${levelConfig.name} level interview.
 Keep it conversational, engaging, and appropriate for the difficulty level. Pay close attention to Interview type context`;
 
             if (interviewTypeId) {
                 const interviewTypeResult = await this.interviewTypeService.getInterviewTypeById(userId, interviewTypeId);
                 if (interviewTypeResult.isOk() && interviewTypeResult.value.description) {
-                    aiResponsePrompt = `You are an AI interviewer assistant for a ${levelConfig.name} level position. 
+                    aiResponsePrompt = `You are an AI interviewer assistant for a ${levelConfig.name} level position.
 
 Interview type context: ${interviewTypeResult.value.description}
 
 Based on this candidate's response:
 "${transcriptedText}"
 
-Provide a brief, professional follow-up question or comment in Spanish that would be appropriate for this interview type and ${levelConfig.name} level interview. 
+Provide a brief, professional follow-up question or comment in Spanish that would be appropriate for this interview type and ${levelConfig.name} level interview.
 Keep it conversational, engaging, and appropriate for the difficulty level.`;
                 }
             }
@@ -190,17 +208,19 @@ Keep it conversational, engaging, and appropriate for the difficulty level.`;
             });
 
         } catch (error) {
-            return err({ 
-                type: 'ValidationError', 
-                message: error instanceof Error ? error.message : 'Error processing audio' 
+            return err({
+                type: 'ValidationError',
+                message: error instanceof Error ? error.message : 'Error processing audio'
             });
         }
     }
 
 
     async evaluateInterview(
+        interviewId: number,
         interviewHistory: Array<{ user: string; ai: string }>,
-        candidateMetricsHistory: any[]
+        candidateMetricsHistory: any[],
+        startTime: Date
     ): Promise<Result<{
         wouldPass: boolean;
         score: number;
@@ -231,6 +251,37 @@ Keep it conversational, engaging, and appropriate for the difficulty level.`;
                 contentScore,
                 vocalScore
             );
+
+            // Calcular duración en minutos
+            const endTime = new Date();
+            const durationMs = endTime.getTime() - startTime.getTime();
+            const durationMinutes = Math.round(durationMs / 60000);
+
+            // Actualizar interview con resultados finales
+            const interview = await this.interviewRepository.findById(interviewId);
+            if (interview) {
+                interview.score = overallScore;
+                interview.status = 'completed';
+                interview.completedAt = endTime;
+                interview.durationMinutes = durationMinutes;
+                await this.interviewRepository.save(interview);
+            }
+
+            // Extraer fortalezas y áreas de mejora del feedback
+            const strengthsMatch = feedback.match(/fortalezas?:?\s*([^\n]+)/i);
+            const weaknessesMatch = feedback.match(/áreas? de mejora:?\s*([^\n]+)/i);
+
+            // Guardar evaluación
+            const evaluationResult = await this.interviewEvaluationService.createEvaluation({
+                interviewId,
+                areasToImprove: weaknessesMatch ? weaknessesMatch[1].trim() : 'Areas to improve not specified',
+                strengths: strengthsMatch ? strengthsMatch[1].trim() : null,
+                aiFeedback: feedback
+            });
+
+            if (evaluationResult.isErr()) {
+                console.error('Error saving evaluation:', evaluationResult.error);
+            }
 
             return ok({
                 wouldPass,
