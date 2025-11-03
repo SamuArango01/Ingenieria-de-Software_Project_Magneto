@@ -12,6 +12,7 @@ import morgan from "morgan";
 import { clerkMiddleware } from '@clerk/express';
 import { syncUserMiddleware } from "@/middleware/syncUserMiddleware";
 import { socketAuthMiddleware } from "@/middleware/socketAuthMiddleware";
+import { InterviewTTSSocketController } from "@/modules/interviews-tts/controllers/InterviewTTSSocketController";
 
 const app = express();
 const httpServer = createServer(app);
@@ -38,12 +39,8 @@ AppDataSource.initialize()
         interviewNamespace.on('connection', (socket) => {
             console.log(`[Socket.IO] User connected: ${socket.data.userId}`);
 
-            // Controller will be initialized here
-            // const controller = new InterviewTTSSocketController(socket, interviewNamespace);
-
-            socket.on('disconnect', () => {
-                console.log(`[Socket.IO] User disconnected: ${socket.data.userId}`);
-            });
+            // Initialize controller for this socket
+            new InterviewTTSSocketController(socket, interviewNamespace);
         });
 
         httpServer.listen(PORT, () => {
