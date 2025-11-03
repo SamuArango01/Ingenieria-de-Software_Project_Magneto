@@ -4,20 +4,51 @@ import "reflect-metadata";
 import express from "express";
 import cors from "cors";
 import fs from "fs";
+import { createServer } from "http";
+import { Server as SocketIOServer } from "socket.io";
 import { AppDataSource } from "@/database/data-source";
 import router from "@/routes";
 import morgan from "morgan";
 import { clerkMiddleware } from '@clerk/express';
 import { syncUserMiddleware } from "@/middleware/syncUserMiddleware";
+import { socketAuthMiddleware } from "@/middleware/socketAuthMiddleware";
 
 const app = express();
+const httpServer = createServer(app);
 const PORT = process.env.PORT || 3211;
+
+// Socket.IO server setup
+const io = new SocketIOServer(httpServer, {
+    cors: {
+        origin: process.env.CLIENT_URL || "http://localhost:3000",
+        methods: ["GET", "POST"],
+        credentials: true
+    },
+    maxHttpBufferSize: 1e7 // 10MB for audio chunks
+});
 
 AppDataSource.initialize()
     .then(() => {
         console.log("Data Source has been initialized!");
-        app.listen(PORT, () => {
+
+        // Setup Socket.IO namespace for TTS interviews
+        const interviewNamespace = io.of('/interviews-tts');
+        interviewNamespace.use(socketAuthMiddleware);
+
+        interviewNamespace.on('connection', (socket) => {
+            console.log(`[Socket.IO] User connected: ${socket.data.userId}`);
+
+            // Controller will be initialized here
+            // const controller = new InterviewTTSSocketController(socket, interviewNamespace);
+
+            socket.on('disconnect', () => {
+                console.log(`[Socket.IO] User disconnected: ${socket.data.userId}`);
+            });
+        });
+
+        httpServer.listen(PORT, () => {
             console.log("Server running on port", PORT);
+            console.log("Socket.IO namespace /interviews-tts ready");
         });
     })
     .catch((err) => {
