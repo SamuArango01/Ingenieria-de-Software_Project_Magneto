@@ -788,15 +788,86 @@ calculateAverageCandidateMetrics(candidateMetrics: any[]): any {
 
             await this.transporter.sendMail(mailOptions);
 
-            return ok({ 
-                success: true, 
-                message: "Email enviado exitosamente" 
+            return ok({
+                success: true,
+                message: "Email enviado exitosamente"
             });
 
         } catch (error) {
-            return err({ 
-                type: 'EmailError', 
-                message: error instanceof Error ? error.message : 'Error sending email' 
+            return err({
+                type: 'EmailError',
+                message: error instanceof Error ? error.message : 'Error sending email'
+            });
+        }
+    }
+
+    async getInterviewWithDetails(interviewId: number): Promise<Result<any, ValidationError>> {
+        try {
+            const interview = await this.interviewRepository.findById(interviewId);
+
+            if (!interview) {
+                return err({
+                    type: 'ValidationError',
+                    message: 'Interview not found'
+                });
+            }
+
+            // Obtener Q&A
+            const qaHistory = await this.interviewQARepository.findByInterviewId(interviewId);
+
+            // Obtener evaluación
+            const evaluationResult = await this.interviewEvaluationService.getEvaluationByInterviewId(interviewId);
+            const evaluation = evaluationResult.isOk() ? evaluationResult.value : null;
+
+            return ok({
+                interview: {
+                    id: interview.id,
+                    userId: interview.userId,
+                    candidateName: interview.candidateName,
+                    status: interview.status,
+                    score: interview.score,
+                    durationMinutes: interview.durationMinutes,
+                    startedAt: interview.startedAt,
+                    completedAt: interview.completedAt,
+                    difficultyLevel: interview.difficultyLevel
+                },
+                qaHistory: qaHistory.map(qa => ({
+                    question: qa.question,
+                    answer: qa.answer,
+                    questionOrder: qa.questionOrder
+                })),
+                evaluation: evaluation ? {
+                    strengths: evaluation.strengths,
+                    areasToImprove: evaluation.areasToImprove,
+                    aiFeedback: evaluation.aiFeedback
+                } : null
+            });
+        } catch (error) {
+            return err({
+                type: 'ValidationError',
+                message: error instanceof Error ? error.message : 'Error fetching interview details'
+            });
+        }
+    }
+
+    async getUserInterviews(userId: string): Promise<Result<any[], ValidationError>> {
+        try {
+            const interviews = await this.interviewRepository.findByUserId(userId);
+
+            return ok(interviews.map(interview => ({
+                id: interview.id,
+                candidateName: interview.candidateName,
+                status: interview.status,
+                score: interview.score,
+                durationMinutes: interview.durationMinutes,
+                startedAt: interview.startedAt,
+                completedAt: interview.completedAt,
+                difficultyLevel: interview.difficultyLevel
+            })));
+        } catch (error) {
+            return err({
+                type: 'ValidationError',
+                message: error instanceof Error ? error.message : 'Error fetching user interviews'
             });
         }
     }
