@@ -5,24 +5,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3, TrendingUp, Zap } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, ReferenceLine, Cell } from 'recharts';
 import { CustomTooltip } from "../ui/CustomTooltip";
+import { ChartsSectionProps } from "../types/charts";
 
-interface InterviewData {
-  month: string;
-  interviews: number;
-}
-
-interface ChartsSectionProps {
-  interviewData: InterviewData[];
-}
-
-export function ChartsSection({ interviewData }: ChartsSectionProps) {
+export function ChartsSection({ interviewData }: Readonly<ChartsSectionProps>) {
   const [activeChart, setActiveChart] = useState<'bar' | 'line'>('bar');
 
   // Calcular métricas
   const { totalInterviews, monthlyAverage, monthlyTarget, performance } = useMemo(() => {
     const total = interviewData.reduce((sum, item) => sum + item.interviews, 0);
     const average = total / interviewData.length;
-    const target = 18; // Meta mensual objetivo
+    const target = 18;
     const aboveTarget = interviewData.filter(item => item.interviews >= target).length;
     const performanceRate = Math.round((aboveTarget / interviewData.length) * 100);
     
@@ -34,11 +26,16 @@ export function ChartsSection({ interviewData }: ChartsSectionProps) {
     };
   }, [interviewData]);
 
-  const barData = interviewData.map(item => ({
-    ...item,
-    target: monthlyTarget,
-    color: item.interviews >= monthlyTarget ? "#10B981" : "#3B82F6"
-  }));
+  // Crear datos para el gráfico 
+  const barData = useMemo(() => 
+    interviewData.map((item, index) => ({
+      ...item,
+      id: `month-${index}-${item.month}`,
+      target: monthlyTarget,
+      color: item.interviews >= monthlyTarget ? "#10B981" : "#3B82F6",
+    })),
+    [interviewData, monthlyTarget]
+  );
 
   return (
     <Card className="bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700 rounded-2xl shadow-xl">
@@ -104,8 +101,7 @@ export function ChartsSection({ interviewData }: ChartsSectionProps) {
             {activeChart === 'bar' ? (
               <BarChart 
                 data={barData} 
-                margin={{ top: 20, right: 30, left: 20, bottom: 10 }}
-                barSize={32}
+                margin={{ top: 25, right: 50, left: 20, bottom: 10 }} 
               >
                 <CartesianGrid 
                   strokeDasharray="3 3" 
@@ -129,7 +125,7 @@ export function ChartsSection({ interviewData }: ChartsSectionProps) {
                   fontSize={11}
                   tickLine={false}
                   axisLine={{ stroke: '#4B5563', strokeWidth: 1 }}
-                  width={35}
+                  width={40}
                   tick={{ fill: '#D1D5DB' }}
                   domain={[0, 'dataMax + 5']}
                 />
@@ -139,17 +135,16 @@ export function ChartsSection({ interviewData }: ChartsSectionProps) {
                   cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }}
                 />
                 
-               
                 <ReferenceLine 
                   y={monthlyTarget} 
                   stroke="#10B981"
                   strokeDasharray="4 4"
                   strokeWidth={2.5}
                   label={{
-                    value: `META ${monthlyTarget}`,
-                    position: 'right',
+                    value: `META`,
+                    position: 'right', 
                     fill: '#10B981',
-                    fontSize: 11,
+                    fontSize: 12,
                     fontWeight: 'bold',
                     offset: 10
                   }}
@@ -159,10 +154,11 @@ export function ChartsSection({ interviewData }: ChartsSectionProps) {
                   dataKey="interviews" 
                   name="Entrevistas Realizadas"
                   radius={[6, 6, 0, 0]}
+                  barSize={100} 
                 >
-                  {barData.map((entry, index) => (
+                  {barData.map((entry) => (
                     <Cell 
-                      key={`cell-${index}`} 
+                      key={entry.id} 
                       fill={entry.color}
                     />
                   ))}
@@ -171,7 +167,7 @@ export function ChartsSection({ interviewData }: ChartsSectionProps) {
             ) : (
               <LineChart 
                 data={barData} 
-                margin={{ top: 20, right: 30, left: 20, bottom: 10 }}
+                margin={{ top: 25, right: 50, left: 20, bottom: 10 }} 
               >
                 <CartesianGrid 
                   strokeDasharray="3 3" 
@@ -195,7 +191,7 @@ export function ChartsSection({ interviewData }: ChartsSectionProps) {
                   fontSize={11}
                   tickLine={false}
                   axisLine={{ stroke: '#4B5563', strokeWidth: 1 }}
-                  width={35}
+                  width={40}
                   tick={{ fill: '#D1D5DB' }}
                   domain={[0, 'dataMax + 5']}
                 />
@@ -205,17 +201,16 @@ export function ChartsSection({ interviewData }: ChartsSectionProps) {
                   cursor={{ stroke: '#4B5563', strokeWidth: 1, strokeDasharray: '3 3' }}
                 />
                 
-                {/* Línea de meta */}
                 <ReferenceLine 
                   y={monthlyTarget} 
                   stroke="#10B981"
                   strokeDasharray="4 4"
                   strokeWidth={2.5}
                   label={{
-                    value: `META ${monthlyTarget}`,
-                    position: 'right',
+                    value: `META`, 
+                    position: 'right', 
                     fill: '#10B981',
-                    fontSize: 11,
+                    fontSize: 12,
                     fontWeight: 'bold',
                     offset: 10
                   }}
@@ -245,31 +240,30 @@ export function ChartsSection({ interviewData }: ChartsSectionProps) {
           </ResponsiveContainer>
         </div>
         
-        {/* Leyenda */}
         <div className="flex flex-wrap items-center justify-between gap-4 mt-6 pt-4 border-t border-gray-700">
-          <div className="flex items-center gap-4 text-xs">
+          <div className="flex items-center gap-4 text-sm">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-blue-500 rounded"></div>
-              <span className="text-gray-400">Debajo de la meta</span>
+              <div className="w-5 h-5 bg-blue-500 rounded"></div>
+              <span className="text-gray-300">Debajo de la meta</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-green-500 rounded"></div>
-              <span className="text-gray-400">Sobre la meta</span>
+              <div className="w-5 h-5 bg-green-500 rounded"></div>
+              <span className="text-gray-300">Sobre la meta</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-6 h-1 bg-green-500 bg-dashed border-2 border-green-500 border-dashed"></div>
-              <span className="text-gray-400">Meta mensual</span>
+              <div className="w-10 h-2 bg-transparent border-2 border-green-500 border-dashed"></div>
+              <span className="text-gray-300">Meta: {monthlyTarget} entrevistas</span>
             </div>
           </div>
           
-          <div className="flex items-center gap-4 text-xs">
+          <div className="flex items-center gap-6">
             <div className="text-center">
-              <div className="text-green-400 font-bold text-lg">{performance}%</div>
-              <div className="text-gray-400">Rendimiento</div>
+              <div className="text-green-400 font-bold text-2xl">{performance}%</div>
+              <div className="text-gray-400 text-sm">Rendimiento</div>
             </div>
             <div className="text-center">
-              <div className="text-blue-400 font-bold text-lg">{monthlyAverage}</div>
-              <div className="text-gray-400">Promedio</div>
+              <div className="text-blue-400 font-bold text-2xl">{monthlyAverage}</div>
+              <div className="text-gray-400 text-sm">Promedio/mes</div>
             </div>
           </div>
         </div>

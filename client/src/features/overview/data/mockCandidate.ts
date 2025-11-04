@@ -1,4 +1,4 @@
-import { mockCandidateDetail } from "../[id]/data/mockCandidate";
+
 
 export const mockCandidates = [
   {

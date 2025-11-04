@@ -7,8 +7,3 @@ export interface Candidate {
   interviews: number;
   averageScore: number;
 }
-
-export interface ChartData {
-  month: string;
-  interviews: number;
-}
