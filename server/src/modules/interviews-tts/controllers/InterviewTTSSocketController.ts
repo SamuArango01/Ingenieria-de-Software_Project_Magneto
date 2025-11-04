@@ -1,22 +1,24 @@
 import { Socket, Namespace } from "socket.io";
 import { InterviewTTSService } from "../services/InterviewTTSService";
 import { DeepgramStreamService } from "../services/DeepgramStreamService";
-import { TTSService } from "../services/TTSService";
+import type { ITTSService } from "../interfaces/ITTSService";
+import { TTSServiceFactory } from "../services/TTSServiceFactory";
 
 export class InterviewTTSSocketController {
     private socket: Socket;
     private namespace: Namespace;
     private interviewService: InterviewTTSService;
     private deepgramService: DeepgramStreamService;
-    private ttsService: TTSService;
+    private ttsService: ITTSService;
     private currentInterviewId: number | null = null;
 
-    constructor(socket: Socket, namespace: Namespace) {
+    constructor(socket: Socket, namespace: Namespace, ttsService?: ITTSService) {
         this.socket = socket;
         this.namespace = namespace;
         this.interviewService = new InterviewTTSService();
         this.deepgramService = new DeepgramStreamService();
-        this.ttsService = new TTSService();
+        // Use injected service or create from factory (supports DI and testing)
+        this.ttsService = ttsService || TTSServiceFactory.createFromEnv();
 
         this.setupEventHandlers();
     }

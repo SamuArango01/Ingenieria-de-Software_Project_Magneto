@@ -14,10 +14,8 @@ export default function InterviewTTSInit() {
   const handleStart = () => {
     setIsStarting(true);
 
-    // Start interview without interview type for now (can be added later)
-    startInterview();
-
-    // Navigate to session page
+    // Just navigate to session page
+    // The session page will auto-start the interview when socket connects
     router.push("/entrevistador-tts/session");
   };
 
