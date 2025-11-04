@@ -98,10 +98,10 @@ export class InterviewTTSSocketController {
             this.socket.emit("processing", { status: "transcribing" });
 
             // Convert base64 to buffer
-            const audioBuffer = Buffer.from(data.audio, 'base64');
+            const userAudioBuffer = Buffer.from(data.audio, 'base64');
 
             // Transcribe audio
-            const transcript = await this.deepgramService.transcribeAudio(audioBuffer);
+            const transcript = await this.deepgramService.transcribeAudio(userAudioBuffer);
 
             if (!transcript || transcript.trim().length === 0) {
                 this.socket.emit("error", { message: "Could not transcribe audio" });
@@ -151,12 +151,12 @@ export class InterviewTTSSocketController {
                 );
 
                 // Convert final message to speech
-                const audioBuffer = await this.ttsService.textToSpeech(aiResponse.message);
+                const finalAudioBuffer = await this.ttsService.textToSpeech(aiResponse.message);
 
                 // Emit final response
                 this.socket.emit("ai_response", {
                     message: aiResponse.message,
-                    audio: audioBuffer.toString('base64'),
+                    audio: finalAudioBuffer.toString('base64'),
                     shouldEnd: true,
                     reason: aiResponse.reason
                 });
@@ -175,12 +175,12 @@ export class InterviewTTSSocketController {
             this.socket.emit("processing", { status: "generating_audio" });
 
             // Convert to speech
-            const audioBuffer = await this.ttsService.textToSpeech(aiResponse.message);
+            const aiAudioBuffer = await this.ttsService.textToSpeech(aiResponse.message);
 
             // Emit AI response with audio
             this.socket.emit("ai_response", {
                 message: aiResponse.message,
-                audio: audioBuffer.toString('base64'),
+                audio: aiAudioBuffer.toString('base64'),
                 shouldEnd: false
             });
 
