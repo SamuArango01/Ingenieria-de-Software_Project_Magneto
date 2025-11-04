@@ -2,11 +2,10 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Power, Clock } from "lucide-react";
+import { Power, Clock, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useInterviewTTS } from "../contexts/InterviewTTSContext";
 import { useSocketConnection } from "./hooks/useSocketConnection";
 import { useAudioRecorder } from "./hooks/useAudioRecorder";
@@ -80,11 +79,16 @@ export default function InterviewTTSSession() {
 
   if (!isConnected) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
-        <Card className="p-8">
-          <Alert>
-            <AlertDescription>Conectando al servidor...</AlertDescription>
-          </Alert>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
+        <Card className="p-8 min-w-[300px]">
+          <CardHeader className="space-y-4">
+            <div className="flex justify-center">
+              <Loader2 className="w-12 h-12 animate-spin text-indigo-600" />
+            </div>
+            <CardTitle className="text-center text-xl">
+              Conectando al servidor...
+            </CardTitle>
+          </CardHeader>
         </Card>
       </div>
     );

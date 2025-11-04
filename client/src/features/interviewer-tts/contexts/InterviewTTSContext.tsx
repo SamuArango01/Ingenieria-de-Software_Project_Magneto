@@ -12,6 +12,7 @@ interface InterviewTTSContextType extends InterviewTTSState {
   // Interview actions
   startInterview: (interviewTypeId?: number) => void;
   endInterview: () => void;
+  setInterviewId: (id: number | null) => void;
 
   // Message actions
   addMessage: (role: "user" | "ai", text: string) => void;
@@ -163,6 +164,7 @@ export function InterviewTTSProvider({ children }: { children: React.ReactNode }
     currentAudio,
     startInterview,
     endInterview,
+    setInterviewId,
     addMessage,
     setIsRecording,
     setProcessingStatus,

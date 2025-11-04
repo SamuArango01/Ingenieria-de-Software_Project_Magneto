@@ -12,6 +12,7 @@ export function useSocketConnection() {
   const {
     socket,
     setSocket,
+    setInterviewId,
     addMessage,
     setProcessingStatus,
     setCurrentAudio,
@@ -36,6 +37,7 @@ export function useSocketConnection() {
         // Event: interview_started
         socketInstance.on("interview_started", (data) => {
           console.log("Interview started:", data.interviewId);
+          setInterviewId(data.interviewId);
           addMessage("ai", data.message);
           setCurrentAudio(data.audio);
           startTimer();
@@ -106,7 +108,7 @@ export function useSocketConnection() {
         setSocket(null);
       }
     };
-  }, [getToken, setSocket, addMessage, setProcessingStatus, setCurrentAudio, startTimer, pauseTimer, router]);
+  }, [getToken, setSocket, setInterviewId, addMessage, setProcessingStatus, setCurrentAudio, startTimer, pauseTimer, router]);
 
   return { socket };
 }

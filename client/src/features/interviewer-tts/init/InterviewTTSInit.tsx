@@ -1,13 +1,19 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useInterviewTTS } from "../contexts/InterviewTTSContext";
 
 export default function InterviewTTSInit() {
   const router = useRouter();
   const { startInterview } = useInterviewTTS();
+  const [isStarting, setIsStarting] = useState(false);
 
   const handleStart = () => {
+    setIsStarting(true);
+
     // Start interview without interview type for now (can be added later)
     startInterview();
 
@@ -41,12 +47,21 @@ export default function InterviewTTSInit() {
           </div>
         </div>
 
-        <button
+        <Button
           onClick={handleStart}
-          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+          disabled={isStarting}
+          className="w-full"
+          size="lg"
         >
-          Comenzar Entrevista
-        </button>
+          {isStarting ? (
+            <>
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              Iniciando...
+            </>
+          ) : (
+            "Comenzar Entrevista"
+          )}
+        </Button>
       </div>
     </div>
   );
