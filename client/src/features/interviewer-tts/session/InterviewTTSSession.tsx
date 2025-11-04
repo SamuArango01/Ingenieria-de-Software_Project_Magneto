@@ -16,12 +16,14 @@ export default function InterviewTTSSession() {
   const router = useRouter();
   const {
     isConnected,
+    interviewId,
     isProcessing,
     processingStatus,
     elapsedTime,
     currentAudio,
     endInterview,
     socket,
+    startInterview,
     setIsRecording: setContextRecording,
   } = useInterviewTTS();
 
@@ -29,6 +31,14 @@ export default function InterviewTTSSession() {
   const { isRecording, audioBlob, startRecording, stopRecording, resetRecording } =
     useAudioRecorder();
   const { playAudioFromBase64 } = useAudioPlayback();
+
+  // Start interview automatically when connected
+  useEffect(() => {
+    if (isConnected && !interviewId && socket) {
+      console.log("Auto-starting interview...");
+      startInterview();
+    }
+  }, [isConnected, interviewId, socket, startInterview]);
 
   // Sync recording state with context
   useEffect(() => {
@@ -56,6 +66,11 @@ export default function InterviewTTSSession() {
   }, [currentAudio, playAudioFromBase64]);
 
   const handleMicClick = () => {
+    if (!interviewId) {
+      console.warn("No active interview, cannot record");
+      return;
+    }
+
     if (isRecording) {
       stopRecording();
     } else if (!isProcessing) {
@@ -110,9 +125,19 @@ export default function InterviewTTSSession() {
 
       {/* Main content - Voice Visualizer */}
       <div className="flex-1 flex items-center justify-center">
-        <div onClick={handleMicClick} className="cursor-pointer">
+        <div
+          onClick={handleMicClick}
+          className={interviewId ? "cursor-pointer" : "cursor-not-allowed opacity-50"}
+        >
           <VoiceVisualizer isRecording={isRecording} isProcessing={isProcessing} />
         </div>
+        {!interviewId && (
+          <div className="absolute bottom-1/3">
+            <Badge variant="outline" className="px-4 py-2">
+              Iniciando entrevista...
+            </Badge>
+          </div>
+        )}
       </div>
 
       {/* Processing status */}
