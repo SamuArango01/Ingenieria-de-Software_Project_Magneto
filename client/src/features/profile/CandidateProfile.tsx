@@ -62,4 +62,10 @@ export function CandidateProfile({ candidateId }: CandidateProfileProps) {
       </div>
     </div>
   );
+
 }
+
+
+
+
+

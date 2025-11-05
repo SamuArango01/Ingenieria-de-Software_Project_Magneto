@@ -1,29 +1,74 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, Calendar, TrendingUp, Star } from "lucide-react";
-import { Candidate } from "../types/candidate";
-import { StatItem } from "../types/charts"; 
+import { Users, Calendar, TrendingUp, Star, CheckCircle } from "lucide-react";
+import { OverviewResponse } from "../types/overview";
 import { useMemo } from "react";
 
 interface StatsCardsProps {
-  readonly candidates: Candidate[];
+  readonly overviewData: OverviewResponse | null;
   readonly isLoading: boolean;
 }
 
-export function StatsCards({ candidates, isLoading }: StatsCardsProps) {
-  const stats = useMemo((): StatItem[] => {
-    const totalInterviews = candidates.reduce((acc, candidate) => acc + candidate.interviews, 0);
-    const averageScore = candidates.length > 0 
-      ? Math.round(candidates.reduce((acc, candidate) => acc + candidate.averageScore, 0) / candidates.length)
-      : 0;
-    const highPerformers = candidates.filter(candidate => candidate.averageScore >= 85).length;
+export function StatsCards({ overviewData, isLoading }: StatsCardsProps) {
+  const stats = useMemo(() => {
+    
+    // Si no hay datos de overview, retornar stats por defecto
+    if (!overviewData) {
+      return [
+        {
+          id: "total-candidates",
+          title: "Total Candidatos",
+          value: 0,
+          trend: "+0% este mes",
+          icon: Users,
+          iconColor: "text-blue-400",
+          bgColor: "bg-blue-500/10", 
+          trendColor: "text-green-400",
+        },
+        {
+          id: "total-interviews",
+          title: "Total Entrevistas",
+          value: 0,
+          trend: "+0% este mes",
+          icon: Calendar,
+          iconColor: "text-purple-400",
+          bgColor: "bg-purple-500/10",
+          trendColor: "text-blue-400",
+        },
+        {
+          id: "completion-rate",
+          title: "Tasa de Finalización",
+          value: "0%",
+          trend: "0 completadas",
+          icon: CheckCircle,
+          iconColor: "text-green-400",
+          bgColor: "bg-green-500/10",
+          trendColor: "text-green-400",
+        },
+        {
+          id: "avg-score",
+          title: "Puntuación Promedio",
+          value: "0.0",
+          trend: "Puntuación global",
+          icon: Star,
+          iconColor: "text-orange-400",
+          bgColor: "bg-orange-500/10",
+          trendColor: "text-orange-400",
+        },
+      ];
+    }
+
+
+    const interviewsTrend = calculateInterviewsTrend(overviewData.interviewsByMonth);
+
+
 
     return [
       {
         id: "total-candidates",
         title: "Total Candidatos",
-        value: candidates.length,
-        trend: "+12% este mes",
+        value: overviewData.totalCandidates,
+        trend: "+12% este mes", 
         icon: Users,
         iconColor: "text-blue-400",
         bgColor: "bg-blue-500/10",
@@ -32,28 +77,38 @@ export function StatsCards({ candidates, isLoading }: StatsCardsProps) {
       {
         id: "total-interviews",
         title: "Total Entrevistas",
-        value: totalInterviews,
-        trend: "+8% este mes",
+        value: overviewData.totalInterviews,
+        trend: interviewsTrend,
         icon: Calendar,
         iconColor: "text-purple-400",
         bgColor: "bg-purple-500/10",
-        trendColor: "text-blue-400",
+        trendColor: getTrendColor(interviewsTrend),
       },
       {
-        id: "performance",
-        title: "Rendimiento",
-        value: `${averageScore}%`,
-        trend: `${highPerformers} alto desempeño`,
+        id: "completion-rate",
+        title: "Tasa de Finalización",
+        value: `${overviewData.completionRate}%`,
+        trend: `${overviewData.completedInterviews} completadas`,
+        icon: CheckCircle,
+        iconColor: "text-green-400",
+        bgColor: "bg-green-500/10",
+        trendColor: "text-green-400",
+      },
+      {
+        id: "avg-score",
+        title: "Puntuación Promedio",
+        value: overviewData.avgGlobalScore?.toFixed(1) || "0.0",
+        trend: "Puntuación global",
         icon: Star,
         iconColor: "text-orange-400",
         bgColor: "bg-orange-500/10",
         trendColor: "text-orange-400",
       },
     ];
-  }, [candidates]);
+  }, [overviewData]);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {stats.map((stat) => (
         <Card key={stat.id} className="bg-gray-800 border border-gray-700">
           <CardContent className="p-6">
@@ -83,4 +138,38 @@ export function StatsCards({ candidates, isLoading }: StatsCardsProps) {
       ))}
     </div>
   );
+}
+
+
+function calculateInterviewsTrend(interviewsByMonth: { month: string; total: number }[]): string {
+  if (!interviewsByMonth || interviewsByMonth.length < 2) {
+    return "+0%";
+  }
+
+  const lastIndex = interviewsByMonth.length - 1;
+  const previousIndex = interviewsByMonth.length - 2;
+
+  const lastMonth = interviewsByMonth[lastIndex];
+  const previousMonth = interviewsByMonth[previousIndex];
+
+  if (lastMonth === undefined || previousMonth === undefined) {
+    return "+0%";
+  }
+
+  return calculateTrend(previousMonth.total, lastMonth.total);
+}
+
+
+function calculateTrend(previous: number, current: number): string {
+  if (previous === 0) return current > 0 ? "+100%" : "+0%";
+  
+  const change = ((current - previous) / previous) * 100;
+  const sign = change >= 0 ? "+" : "";
+  return `${sign}${Math.round(change)}%`;
+}
+
+function getTrendColor(trend: string): string {
+  if (trend.startsWith('+')) return "text-green-400";
+  if (trend.startsWith('-')) return "text-red-400";
+  return "text-blue-400";
 }
