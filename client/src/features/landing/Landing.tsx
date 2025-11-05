@@ -1,5 +1,5 @@
 import { Header } from "./components/Header";
-import { Prices } from "./components/Prices";
+import { Benefits } from "./components/benefits";
 import { Info } from "./components/Info";
 
 export default function LandingPage() {
@@ -7,7 +7,7 @@ export default function LandingPage() {
     <main>
       <Header />
       <Info />
-      <Prices />
+      <Benefits />
     </main>
   );
 }

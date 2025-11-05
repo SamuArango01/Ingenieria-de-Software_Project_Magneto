@@ -23,50 +23,49 @@ export function ProfileHeader({ profile, performance }: ProfileHeaderProps) {
   const userEmail = user?.primaryEmailAddress?.emailAddress;
 
   return (
-    <Card className="bg-gray-800 border-gray-700 rounded-2xl overflow-hidden">
+    <Card className="bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700 rounded-3xl overflow-hidden shadow-2xl">
       <div className="p-8">
         <div className="flex flex-col md:flex-row items-center gap-8">
           <div className="relative">
-            <Avatar className="h-32 w-32 ring-4 ring-purple-500/20">
-              <AvatarImage src={userAvatar} />
-              <AvatarFallback className="bg-gradient-to-br from-purple-600 to-pink-600 text-white text-3xl">
+            <Avatar className="h-36 w-36 ring-4 ring-purple-500/30 shadow-xl">
+              <AvatarImage src={userAvatar} className="object-cover" />
+              <AvatarFallback className="bg-gradient-to-br from-purple-600 to-pink-600 text-white text-3xl font-bold">
                 {user?.fullName?.split(' ').map(n => n[0]).join('') || profile.name.split(' ').map(n => n[0]).join('')}
               </AvatarFallback>
             </Avatar>
-            <div className="absolute -bottom-2 -right-2">
-              <Badge className="bg-green-500 hover:bg-green-600 text-white px-3 py-1">
+            <div className="absolute -bottom-3 -right-3">
+              <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-4 py-2 rounded-full shadow-lg border-0 font-semibold">
                 Activo
               </Badge>
             </div>
           </div>
           
           <div className="flex-1 text-center md:text-left">
-            <h1 className="text-4xl font-bold text-white mb-2">
+            <h1 className="text-4xl font-bold text-white mb-3 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
               {user?.fullName || profile.name}
             </h1>
-            <p className="text-xl text-gray-300 mb-4">{profile.workField}</p>
+            <p className="text-xl text-gray-300 mb-6 font-medium">{profile.workField}</p>
             
-           
-            <div className="flex flex-col gap-2 mb-4">
+            <div className="flex flex-col gap-3 mb-6">
               {userEmail && (
-                <div className="flex items-center gap-2 text-gray-400">
-                  <Mail className="w-4 h-4" />
-                  <span className="text-sm">{userEmail}</span>
+                <div className="flex items-center gap-3 text-gray-400 bg-gray-800/50 rounded-xl p-3 border border-gray-700/50 w-fit">
+                  <Mail className="w-5 h-5 text-purple-400" />
+                  <span className="text-lg">{userEmail}</span>
                 </div>
               )}
             </div>
             
-            <div className="flex flex-wrap gap-3 justify-center md:justify-start">
-              <Badge variant="secondary" className="bg-gray-700/50 text-white border-gray-600">
-                <Calendar className="w-4 h-4 mr-1" />
+            <div className="flex flex-wrap gap-4 justify-center md:justify-start">
+              <Badge variant="secondary" className="bg-blue-500/20 text-blue-300 border-blue-500/30 px-4 py-2 rounded-full">
+                <Calendar className="w-4 h-4 mr-2" />
                 {profile.yearsExperience} años exp.
               </Badge>
-              <Badge variant="secondary" className="bg-gray-700/50 text-white border-gray-600">
-                <Award className="w-4 h-4 mr-1" />
+              <Badge variant="secondary" className="bg-green-500/20 text-green-300 border-green-500/30 px-4 py-2 rounded-full">
+                <Award className="w-4 h-4 mr-2" />
                 {profile.totalInterviews} entrevistas
               </Badge>
-              <Badge variant="secondary" className="bg-gray-700/50 text-white border-gray-600">
-                <Star className="w-4 h-4 mr-1" />
+              <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-300 border-yellow-500/30 px-4 py-2 rounded-full">
+                <Star className="w-4 h-4 mr-2" />
                 {performance.level}
               </Badge>
             </div>

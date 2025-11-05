@@ -14,31 +14,37 @@ interface StatsCardsProps {
 export function StatsCards({ profile, performance, formatDuration }: StatsCardsProps) {
   const stats = [
     {
-      title: "Score Promedio",
+      title: "Rendimiento General",
       value: `${profile.averageScore}%`,
       description: performance.level,
       icon: TrendingUp,
-      iconColor: "text-green-400",
-      borderColor: "hover:border-purple-500/50",
-      valueColor: "text-green-400"
+      bgColor: "bg-slate-800",
+      borderColor: "border-slate-700",
+      iconBg: "bg-emerald-500/20",
+      iconColor: "text-emerald-400",
+      valueColor: "text-emerald-400"
     },
     {
-      title: "Duración Promedio",
+      title: "Tiempo Promedio",
       value: formatDuration(profile.averageDuration),
-      description: "Por entrevista",
+      description: "Por sesión de entrevista",
       icon: Clock,
+      bgColor: "bg-slate-800",
+      borderColor: "border-slate-700",
+      iconBg: "bg-blue-500/20",
       iconColor: "text-blue-400",
-      borderColor: "hover:border-blue-500/50",
       valueColor: "text-blue-400"
     },
     {
-      title: "Entrevistas",
+      title: "Sesiones Realizadas",
       value: profile.totalInterviews.toString(),
-      description: "Completadas",
+      description: "Entrevistas completadas",
       icon: Award,
-      iconColor: "text-yellow-400",
-      borderColor: "hover:border-yellow-500/50",
-      valueColor: "text-yellow-400"
+      bgColor: "bg-slate-800",
+      borderColor: "border-slate-700",
+      iconBg: "bg-amber-500/20",
+      iconColor: "text-amber-400",
+      valueColor: "text-amber-400"
     }
   ];
 
@@ -47,19 +53,21 @@ export function StatsCards({ profile, performance, formatDuration }: StatsCardsP
       {stats.map((stat) => (
         <Card 
           key={stat.title}
-          className={`bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700 transition-all duration-300 ${stat.borderColor}`}
+          className={`${stat.bgColor} ${stat.borderColor} border transition-all duration-300 hover:shadow-lg hover:border-slate-600 group`}
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle className="text-sm font-medium text-gray-400">
+            <CardTitle className="text-sm font-semibold text-slate-300">
               {stat.title}
             </CardTitle>
-            <stat.icon className={`h-5 w-5 ${stat.iconColor}`} />
+            <div className={`p-2 ${stat.iconBg} rounded-lg group-hover:scale-110 transition-transform`}>
+              <stat.icon className={`h-4 w-4 ${stat.iconColor}`} />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className={`text-3xl font-bold mb-2 ${stat.valueColor}`}>
+            <div className={`text-2xl font-bold mb-1 ${stat.valueColor}`}>
               {stat.value}
             </div>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-slate-400 font-medium">
               {stat.description}
             </p>
           </CardContent>

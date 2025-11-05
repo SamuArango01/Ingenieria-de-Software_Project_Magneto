@@ -1,4 +1,4 @@
-import { Users, LayoutDashboard  } from "lucide-react";
+import { Users  } from "lucide-react";
 
 export function HeaderSection() {
   return (
@@ -20,12 +20,6 @@ export function HeaderSection() {
           </div>
         </div>
         
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full lg:w-auto">
-        <button className="flex items-center justify-center gap-2 px-6 py-3 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-xl transition-all duration-200 text-white font-medium">
-          <LayoutDashboard className="w-5 h-5" />
-          <span>Mi dashboard</span>
-        </button>
-      </div>
       </div>
     </div>
   );
