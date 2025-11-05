@@ -14,9 +14,11 @@ interface Props {
   readonly isOpen?: boolean;
   readonly onToggle?: () => void;
   readonly onClose?: () => void;
+  readonly workFields?: string[];
 }
 
-const workFields = [
+// Lista de campos de trabajo por defecto (backup)
+const defaultWorkFields = [
   "Todos",
   "Desarrollo Frontend",
   "Desarrollo Backend", 
@@ -26,7 +28,6 @@ const workFields = [
   "Data Science",
   "UX/UI Design"
 ];
-
 
 function Portal({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
@@ -41,12 +42,19 @@ function Portal({ children }: { children: React.ReactNode }) {
     : null;
 }
 
-export function FiltersSection({ filters, onFiltersChange, onClearFilters, isOpen, onToggle, onClose }: Props) {
+export function FiltersSection({ 
+  filters, 
+  onFiltersChange, 
+  onClearFilters, 
+  isOpen, 
+  onToggle, 
+  onClose,
+  workFields = defaultWorkFields 
+}: Props) {
   const [internalOpen, setInternalOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ top: 0, left: 0 });
-
 
   const isControlled = isOpen !== undefined;
   const open = isControlled ? isOpen : internalOpen;
@@ -67,7 +75,6 @@ export function FiltersSection({ filters, onFiltersChange, onClearFilters, isOpe
     }
   };
 
- 
   useEffect(() => {
     if (open && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
@@ -78,7 +85,6 @@ export function FiltersSection({ filters, onFiltersChange, onClearFilters, isOpe
     }
   }, [open]);
 
-  
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (panelRef.current && !panelRef.current.contains(event.target as Node) &&
@@ -121,7 +127,7 @@ export function FiltersSection({ filters, onFiltersChange, onClearFilters, isOpe
 
   return (
     <div className="relative">
-  
+   
       <div className="flex items-center gap-2">
         <Button 
           ref={buttonRef}
@@ -154,7 +160,7 @@ export function FiltersSection({ filters, onFiltersChange, onClearFilters, isOpe
         )}
       </div>
 
-      
+    
       {open && (
         <Portal>
           <div 
@@ -182,6 +188,7 @@ export function FiltersSection({ filters, onFiltersChange, onClearFilters, isOpe
               </div>
 
               <div className="space-y-3">
+               
                 <div className="space-y-2">
                   <label htmlFor="workField-filter" className="text-xs font-medium text-gray-300 block">
                     Área de Trabajo
@@ -193,11 +200,14 @@ export function FiltersSection({ filters, onFiltersChange, onClearFilters, isOpe
                     className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     {workFields.map(field => (
-                      <option key={field} value={field} className="bg-gray-700">{field}</option>
+                      <option key={field} value={field} className="bg-gray-700">
+                        {field}
+                      </option>
                     ))}
                   </select>
                 </div>
 
+              
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <label htmlFor="minExperience-filter" className="text-xs font-medium text-gray-300 block">
@@ -214,6 +224,8 @@ export function FiltersSection({ filters, onFiltersChange, onClearFilters, isOpe
                       <option value={2}>2+ años</option>
                       <option value={3}>3+ años</option>
                       <option value={5}>5+ años</option>
+                      <option value={8}>8+ años</option>
+                      <option value={10}>10+ años</option>
                     </select>
                   </div>
 
@@ -228,6 +240,7 @@ export function FiltersSection({ filters, onFiltersChange, onClearFilters, isOpe
                       className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
                       <option value={0}>Cualquiera</option>
+                      <option value={50}>50%+</option>
                       <option value={60}>60%+</option>
                       <option value={70}>70%+</option>
                       <option value={80}>80%+</option>
@@ -251,11 +264,12 @@ export function FiltersSection({ filters, onFiltersChange, onClearFilters, isOpe
                     <option value={2}>2+</option>
                     <option value={3}>3+</option>
                     <option value={5}>5+</option>
+                    <option value={10}>10+</option>
                   </select>
                 </div>
               </div>
 
-            
+          
               {hasActiveFilters && (
                 <div className="pt-3 border-t border-gray-700">
                   <p className="text-xs text-gray-400 mb-2">Filtros aplicados:</p>
@@ -267,7 +281,7 @@ export function FiltersSection({ filters, onFiltersChange, onClearFilters, isOpe
                     )}
                     {filters.minExperience > 0 && (
                       <Badge variant="secondary" className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-xs">
-                        Exp: {filters.minExperience}+
+                        Exp: {filters.minExperience}+ años
                       </Badge>
                     )}
                     {filters.minScore > 0 && (

@@ -8,6 +8,7 @@ interface ProgressChartProps {
 }
 
 export function ProgressChart({ scoreHistory }: ProgressChartProps) {
+
   const chartData = scoreHistory.map(item => ({
     date: item.date,
     score: item.score,

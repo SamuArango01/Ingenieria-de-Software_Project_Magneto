@@ -4,11 +4,11 @@ import { useState, useMemo } from "react";
 import { SearchInput } from "./SearchInput";
 import { CandidatesTable } from "./CandidatesTable";
 import { FiltersSection } from "./FiltersSection";
-import { Candidate, Filters } from "../types/candidates";
+import { CandidateListItem, Filters } from "../types/candidates";
 import { Users, Search, Filter, User } from "lucide-react";
 
 interface Props {
-  readonly initialCandidates: Candidate[];
+  readonly initialCandidates: CandidateListItem[];
 }
 
 export function CandidatesView({ initialCandidates }: Props) {
@@ -21,19 +21,27 @@ export function CandidatesView({ initialCandidates }: Props) {
   });
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
+  const safeInitialCandidates = useMemo(() => {
+    return initialCandidates || [];
+  }, [initialCandidates]);
+
   const filteredCandidates = useMemo(() => {
-    return initialCandidates.filter(candidate => {
-      const matchesSearch = candidate.name.toLowerCase().includes(searchTerm.toLowerCase()) 
+    return safeInitialCandidates.filter(candidate => {
+      const matchesSearch = candidate.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           candidate.email.toLowerCase().includes(searchTerm.toLowerCase());
+      
       const matchesWorkField = filters.workField === "Todos" || 
-                              candidate.workField === filters.workField;
-      const matchesExperience = candidate.yearsExperience >= filters.minExperience;
-      const matchesScore = candidate.averageScore >= filters.minScore;
-      const matchesInterviews = candidate.interviews >= filters.minInterviews;
+                              candidate.workField === filters.workField ||
+                              candidate.customWorkField === filters.workField;
+      
+      const matchesExperience = (candidate.yearsOfExperience || 0) >= filters.minExperience;
+      const matchesScore = (candidate.avgScore || 0) >= filters.minScore;
+      const matchesInterviews = candidate.completedInterviews >= filters.minInterviews;
 
       return matchesSearch && matchesWorkField && matchesExperience && 
              matchesScore && matchesInterviews;
     });
-  }, [initialCandidates, searchTerm, filters]);
+  }, [safeInitialCandidates, searchTerm, filters]);
 
   const clearFilters = () => {
     setFilters({
@@ -45,7 +53,7 @@ export function CandidatesView({ initialCandidates }: Props) {
     setIsFiltersOpen(false);
   };
 
-  const totalCandidates = initialCandidates.length;
+  const totalCandidates = safeInitialCandidates.length;
   const activeFilters = [
     filters.workField !== "Todos",
     filters.minExperience > 0,
@@ -53,11 +61,27 @@ export function CandidatesView({ initialCandidates }: Props) {
     filters.minInterviews > 0
   ].filter(Boolean).length;
 
+  
+  const workFields = useMemo(() => {
+    const fields = new Set<string>();
+    
+  
+    if (safeInitialCandidates && Array.isArray(safeInitialCandidates)) {
+      for (const candidate of safeInitialCandidates) {
+        if (candidate.workField) fields.add(candidate.workField);
+        if (candidate.customWorkField) fields.add(candidate.customWorkField);
+      }
+    }
+    
+    return ["Todos", ...Array.from(fields)].sort((a, b) => a.localeCompare(b));
+  }, [safeInitialCandidates]);
+
+
   return (
     <div className="min-h-screen bg-gray-900 py-4 px-4 sm:px-6">
       <div className="max-w-7xl mx-auto space-y-6">
       
-    
+     
         <div className="space-y-4 p-4"> 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
@@ -74,7 +98,7 @@ export function CandidatesView({ initialCandidates }: Props) {
               </div>
             </div>
             
-     
+            {/* Stats Card */}
             <div className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-lg p-4 border border-blue-500/20 w-full sm:w-auto text-center sm:min-w-32">
               <div className="flex items-center justify-center gap-2 mb-1">
                 <User className="w-5 h-5 text-blue-400" />
@@ -89,10 +113,11 @@ export function CandidatesView({ initialCandidates }: Props) {
           </div>
         </div>
 
- 
+       
         <div className="bg-gray-800/50 rounded-lg p-5 border border-gray-700/50 backdrop-blur-sm">
           <div className="flex flex-col lg:flex-row items-start lg:items-end gap-5">
       
+       
             <div className="flex-1 w-full">
               <div className="flex items-center gap-3 mb-3">
                 <Search className="w-6 h-6 text-blue-400" />
@@ -104,6 +129,7 @@ export function CandidatesView({ initialCandidates }: Props) {
                 placeholder="Nombre, email..."
               />
             </div>
+
 
             <div className="flex-shrink-0 w-full lg:w-auto">
               <div className="flex items-center gap-3 mb-3">
@@ -117,11 +143,12 @@ export function CandidatesView({ initialCandidates }: Props) {
                 isOpen={isFiltersOpen}
                 onToggle={() => setIsFiltersOpen(!isFiltersOpen)}
                 onClose={() => setIsFiltersOpen(false)}
+                workFields={workFields}
               />
             </div>
           </div>
 
-
+   
           {activeFilters > 0 && (
             <div className="mt-4 pt-4 border-t border-gray-700/30">
               <div className="flex flex-wrap items-center gap-2 text-base text-gray-400">
@@ -134,7 +161,7 @@ export function CandidatesView({ initialCandidates }: Props) {
                 )}
                 {filters.minExperience > 0 && (
                   <span className="bg-green-500/20 text-green-300 px-3 py-1.5 rounded-md text-sm">
-                    Exp: {filters.minExperience}+
+                    Exp: {filters.minExperience}+ años
                   </span>
                 )}
                 {filters.minScore > 0 && (
@@ -152,6 +179,7 @@ export function CandidatesView({ initialCandidates }: Props) {
           )}
         </div>
 
+  
         <div className="bg-gray-800/50 rounded-lg border border-gray-700/50 overflow-hidden backdrop-blur-sm">
           {filteredCandidates.length > 0 ? (
             <div className="relative overflow-x-auto">
@@ -184,7 +212,7 @@ export function CandidatesView({ initialCandidates }: Props) {
           )}
         </div>
 
-  
+     
         {filteredCandidates.length > 0 && (
           <div className="flex flex-col sm:flex-row justify-between items-center gap-2 text-base text-gray-400 px-2">
             <div className="text-center sm:text-left">

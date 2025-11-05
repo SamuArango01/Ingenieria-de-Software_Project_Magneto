@@ -25,7 +25,6 @@ export function useProfileData(candidateId?: string) {
     return { level: "Necesita mejorar", color: "text-red-400" };
   }
 
-  // Helper para obtener datos específicos si necesitas mantener compatibilidad
   const getCandidateUser = (): CandidateProfile['user'] | null => {
     return profile?.user || null;
   };
