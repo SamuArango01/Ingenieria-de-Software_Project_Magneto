@@ -32,7 +32,7 @@ export function CandidateProfile({ candidateId }: CandidateProfileProps) {
     return (
       <RefetchingState 
         profile={profile} 
-        performance={getPerformanceLevel(profile.averageScore)} 
+        performance={getPerformanceLevel(profile.metrics.avgScore || 0)} 
         formatDuration={formatDuration} 
       />
     );
@@ -43,7 +43,7 @@ export function CandidateProfile({ candidateId }: CandidateProfileProps) {
   if (!profile) return <LoadingState />;
 
   // Estado exitoso - mostrar perfil
-  const performance = getPerformanceLevel(profile.averageScore);
+  const performance = getPerformanceLevel(profile.metrics.avgScore || 0);
 
   return (
     <div className="min-h-screen bg-gray-900 p-6">
@@ -54,18 +54,9 @@ export function CandidateProfile({ candidateId }: CandidateProfileProps) {
           performance={performance}
           formatDuration={formatDuration}
         />
-        <ProgressChart interviewHistory={profile.interviewHistory} />
-        <StrengthsWeaknesses 
-          strengths={profile.strengths} 
-          weaknesses={profile.weaknesses} 
-        />
+        <ProgressChart scoreHistory={profile.scoreHistory} />
+        <StrengthsWeaknesses latestEvaluation={profile.latestEvaluation} />
       </div>
     </div>
   );
-
 }
-
-
-
-
-

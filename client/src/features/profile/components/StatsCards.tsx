@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Clock, TrendingUp, Award } from "lucide-react";
+import { Clock, TrendingUp, Award, CheckCircle, PlayCircle, XCircle } from "lucide-react";
 import { CandidateProfile } from "../types/candidate";
 
 interface StatsCardsProps {
@@ -15,7 +15,7 @@ export function StatsCards({ profile, performance, formatDuration }: StatsCardsP
   const stats = [
     {
       title: "Rendimiento General",
-      value: `${profile.averageScore}%`,
+      value: `${profile.metrics.avgScore || 0}%`,
       description: performance.level,
       icon: TrendingUp,
       bgColor: "bg-slate-800",
@@ -26,7 +26,7 @@ export function StatsCards({ profile, performance, formatDuration }: StatsCardsP
     },
     {
       title: "Tiempo Promedio",
-      value: formatDuration(profile.averageDuration),
+      value: formatDuration(profile.metrics.avgDuration || 0),
       description: "Por sesión de entrevista",
       icon: Clock,
       bgColor: "bg-slate-800",
@@ -37,19 +37,52 @@ export function StatsCards({ profile, performance, formatDuration }: StatsCardsP
     },
     {
       title: "Sesiones Realizadas",
-      value: profile.totalInterviews.toString(),
-      description: "Entrevistas completadas",
+      value: profile.metrics.totalInterviews.toString(),
+      description: "Total de entrevistas",
       icon: Award,
       bgColor: "bg-slate-800",
       borderColor: "border-slate-700",
       iconBg: "bg-amber-500/20",
       iconColor: "text-amber-400",
       valueColor: "text-amber-400"
+    },
+    {
+      title: "Completadas",
+      value: profile.metrics.completedInterviews.toString(),
+      description: "Entrevistas finalizadas",
+      icon: CheckCircle,
+      bgColor: "bg-slate-800",
+      borderColor: "border-slate-700",
+      iconBg: "bg-green-500/20",
+      iconColor: "text-green-400",
+      valueColor: "text-green-400"
+    },
+    {
+      title: "En Progreso",
+      value: profile.metrics.inProgressInterviews.toString(),
+      description: "Entrevistas activas",
+      icon: PlayCircle,
+      bgColor: "bg-slate-800",
+      borderColor: "border-slate-700",
+      iconBg: "bg-yellow-500/20",
+      iconColor: "text-yellow-400",
+      valueColor: "text-yellow-400"
+    },
+    {
+      title: "Abandonadas",
+      value: profile.metrics.abandonedInterviews.toString(),
+      description: "Sesiones no completadas",
+      icon: XCircle,
+      bgColor: "bg-slate-800",
+      borderColor: "border-slate-700",
+      iconBg: "bg-red-500/20",
+      iconColor: "text-red-400",
+      valueColor: "text-red-400"
     }
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {stats.map((stat) => (
         <Card 
           key={stat.title}
