@@ -1,21 +1,16 @@
 "use client";
 
 import { useCandidates } from "./hooks/useCandidates";
+import { useOverviewStats } from "./hooks/useOverviewStats";
 import { HeaderSection } from "./components/HeaderSection";
 import { StatsCards } from "./components/StatsCards";
 import { ChartsSection } from "./components/ChartsSection";
 
-const interviewData = [
-  { month: 'Ene', interviews: 12 },
-  { month: 'Feb', interviews: 19 },
-  { month: 'Mar', interviews: 8 },
-  { month: 'Abr', interviews: 15 },
-  { month: 'May', interviews: 22 },
-  { month: 'Jun', interviews: 18 },
-];
-
 export function CandidatesOverview() {
-  const { candidates, isLoading } = useCandidates();
+  const { candidates, isLoading: candidatesLoading } = useCandidates();
+  const { interviewData, isLoading: statsLoading } = useOverviewStats();
+
+  const isLoading = candidatesLoading || statsLoading;
 
   return (
     <div className="min-h-screen bg-gray-900 p-6">

@@ -22,7 +22,7 @@ export function mapCandidateFromApi(apiCandidate: CandidateListItemApi): Candida
     workField: apiCandidate.workField || apiCandidate.customWorkField || 'No especificado',
     yearsExperience: apiCandidate.yearsOfExperience ?? 0,
     interviews: apiCandidate.completedInterviews, // Usar solo entrevistas completadas
-    averageScore: apiCandidate.avgScore ?? 0,
+    averageScore: apiCandidate.avgScore, // Mantener null si no tiene score
   };
 }
 

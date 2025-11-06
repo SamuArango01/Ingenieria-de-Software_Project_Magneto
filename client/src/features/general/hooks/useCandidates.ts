@@ -1,31 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { getCandidates } from "../services/candidates-service";
 import { Candidate } from "../types/candidates";
 
 export function useCandidates() {
-  const [candidates, setCandidates] = useState<Candidate[]>([]);
-
-  const addCandidate = (candidate: Candidate) => {
-    setCandidates(prev => [...prev, candidate]);
-  };
-
-  const updateCandidate = (id: string, updates: Partial<Candidate>) => {
-    setCandidates(prev => 
-      prev.map(candidate => 
-        candidate.id === id ? { ...candidate, ...updates } : candidate
-      )
-    );
-  };
-
-  const deleteCandidate = (id: string) => {
-    setCandidates(prev => prev.filter(candidate => candidate.id !== id));
-  };
+  const { data: candidates = [], isLoading, error } = useQuery({
+    queryKey: ["candidates"],
+    queryFn: getCandidates,
+  });
 
   return {
     candidates,
-    addCandidate,
-    updateCandidate,
-    deleteCandidate
+    isLoading,
+    error,
   };
 }

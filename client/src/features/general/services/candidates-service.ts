@@ -1,27 +1,29 @@
-export async function getCandidates() {
-  // Datos mock - reemplazar con  API
-  const mockCandidates = [
-    {
-      id: "1",
-      name: "Ana García",
-      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150",
-      workField: "Desarrollo Frontend",
-      yearsExperience: 3,
-      interviews: 5,
-      averageScore: 82
-    },
-    {
-      id: "2", 
-      name: "Carlos López",
-      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150",
-      workField: "Data Science",
-      yearsExperience: 2,
-      interviews: 3,
-      averageScore: 75
-    },
-    // ... más candidatos
-  ];
+/**
+ * Servicio para obtener datos de candidatos desde la API
+ */
+import { apiClient } from '@/lib/api';
+import { Candidate } from '../types/candidates';
+import { CandidateApiResponse } from '../types/api';
+import { mapCandidateFromApi } from '../mappers/candidates.mapper';
+import { extractNormalizedApiError } from '@/lib/api/errors';
 
-  
-  return mockCandidates;
+export async function getCandidates(): Promise<Candidate[]> {
+  try {
+    const response = await apiClient.get<CandidateApiResponse>(
+      '/v1/analytics/candidates',
+      {
+        params: {
+          limit: 100,
+          sortBy: 'name',
+          order: 'ASC'
+        }
+      }
+    );
+
+    return response.data.data.map(mapCandidateFromApi);
+  } catch (error) {
+    const normalizedError = extractNormalizedApiError(error);
+    console.error('Error fetching candidates:', normalizedError.message);
+    throw normalizedError;
+  }
 }

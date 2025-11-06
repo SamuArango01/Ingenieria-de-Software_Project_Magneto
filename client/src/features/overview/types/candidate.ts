@@ -5,5 +5,5 @@ export interface Candidate {
   workField: string;
   yearsExperience: number;
   interviews: number;
-  averageScore: number;
+  averageScore: number | null;
 }

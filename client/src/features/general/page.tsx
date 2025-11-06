@@ -1,8 +1,7 @@
-import { CandidatesView } from "./components/CandidatesView";
-import { getCandidates } from "./services/candidates-service";
+"use client";
 
-export default async function CandidatesPage() {
-  const candidates = await getCandidates();
-  
-  return <CandidatesView initialCandidates={candidates} />;
+import { CandidatesView } from "./components/CandidatesView";
+
+export default function CandidatesPage() {
+  return <CandidatesView />;
 }

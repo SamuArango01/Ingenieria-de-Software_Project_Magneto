@@ -26,7 +26,10 @@ interface Props {
 }
 
 // Función para determinar las clases del badge basado en el score
-const getScoreBadgeClasses = (score: number) => {
+const getScoreBadgeClasses = (score: number | null) => {
+  if (score === null) {
+    return "bg-gradient-to-r from-gray-500/20 to-gray-500/10 text-gray-300 border-gray-400/40 shadow-lg shadow-gray-500/10";
+  }
   if (score >= 90) {
     return "bg-gradient-to-r from-green-500/20 to-emerald-500/10 text-green-300 border-green-400/40 shadow-lg shadow-green-500/10";
   } else if (score >= 80) {
@@ -41,7 +44,8 @@ const getScoreBadgeClasses = (score: number) => {
 };
 
 // Función para determinar el color del indicador de status
-const getStatusColor = (score: number) => {
+const getStatusColor = (score: number | null) => {
+  if (score === null) return "bg-gray-400";
   if (score >= 90) return "bg-green-400";
   if (score >= 80) return "bg-lime-400";
   if (score >= 70) return "bg-yellow-400";
@@ -50,7 +54,8 @@ const getStatusColor = (score: number) => {
 };
 
 // Función para determinar el color del indicador de progreso
-const getProgressBarGradient = (score: number) => {
+const getProgressBarGradient = (score: number | null) => {
+  if (score === null) return "bg-gradient-to-r from-gray-400 to-gray-400";
   if (score >= 90) return "bg-gradient-to-r from-green-400 to-emerald-400";
   if (score >= 80) return "bg-gradient-to-r from-lime-400 to-green-400";
   if (score >= 70) return "bg-gradient-to-r from-yellow-400 to-amber-400";
@@ -173,12 +178,12 @@ export function CandidatesTable({ candidates }: Props) {
                     variant="default"
                     className={`font-mono font-bold text-sm px-4 py-2 min-w-20 rounded-full border backdrop-blur-sm transition-all duration-300 group-hover:scale-105 ${getScoreBadgeClasses(candidate.averageScore)}`}
                   >
-                    {candidate.averageScore}%
+                    {candidate.averageScore !== null ? `${candidate.averageScore}%` : "N/A"}
                   </Badge>
                   <div className="w-full max-w-24 bg-gray-700/50 rounded-full h-2 backdrop-blur-sm">
-                    <div 
+                    <div
                       className={`h-2 rounded-full transition-all duration-700 ease-out ${getProgressBarGradient(candidate.averageScore)} shadow-lg`}
-                      style={{ width: `${candidate.averageScore}%` }}
+                      style={{ width: `${candidate.averageScore ?? 0}%` }}
                     />
                   </div>
                 </div>

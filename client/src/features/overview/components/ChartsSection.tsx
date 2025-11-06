@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart3, TrendingUp, Zap } from "lucide-react";
+import { BarChart3, TrendingUp } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, ReferenceLine, Cell } from 'recharts';
 import { CustomTooltip } from "../ui/CustomTooltip";
 import { ChartsSectionProps } from "../types/charts";
@@ -11,18 +11,15 @@ export function ChartsSection({ interviewData }: Readonly<ChartsSectionProps>) {
   const [activeChart, setActiveChart] = useState<'bar' | 'line'>('bar');
 
   // Calcular métricas
-  const { totalInterviews, monthlyAverage, monthlyTarget, performance } = useMemo(() => {
+  const { totalInterviews, monthlyAverage, monthlyTarget } = useMemo(() => {
     const total = interviewData.reduce((sum, item) => sum + item.interviews, 0);
     const average = total / interviewData.length;
     const target = 18;
-    const aboveTarget = interviewData.filter(item => item.interviews >= target).length;
-    const performanceRate = Math.round((aboveTarget / interviewData.length) * 100);
-    
+
     return {
       totalInterviews: total,
       monthlyAverage: Math.round(average * 10) / 10,
-      monthlyTarget: target,
-      performance: performanceRate
+      monthlyTarget: target
     };
   }, [interviewData]);
 
@@ -57,10 +54,6 @@ export function ChartsSection({ interviewData }: Readonly<ChartsSectionProps>) {
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                   <span className="text-gray-300">Meta: {monthlyTarget}/mes</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-yellow-500" />
-                  <span className="text-gray-300">Rendimiento: {performance}%</span>
                 </div>
               </div>
             </div>
@@ -255,12 +248,8 @@ export function ChartsSection({ interviewData }: Readonly<ChartsSectionProps>) {
               <span className="text-gray-300">Meta: {monthlyTarget} entrevistas</span>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-6">
-            <div className="text-center">
-              <div className="text-green-400 font-bold text-2xl">{performance}%</div>
-              <div className="text-gray-400 text-sm">Rendimiento</div>
-            </div>
             <div className="text-center">
               <div className="text-blue-400 font-bold text-2xl">{monthlyAverage}</div>
               <div className="text-gray-400 text-sm">Promedio/mes</div>
