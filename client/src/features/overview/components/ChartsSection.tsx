@@ -2,18 +2,30 @@
 
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart3, TrendingUp } from "lucide-react";
+import { BarChart3, TrendingUp, Zap } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, ReferenceLine, Cell } from 'recharts';
 import { CustomTooltip } from "../ui/CustomTooltip";
-import { ChartsSectionProps } from "../types/charts";
+import { OverviewResponse } from "../types/overview";
 
-export function ChartsSection({ interviewData }: Readonly<ChartsSectionProps>) {
+interface ChartsSectionProps {
+  overviewData: OverviewResponse | null;
+}
+
+export function ChartsSection({ overviewData }: Readonly<ChartsSectionProps>) {
   const [activeChart, setActiveChart] = useState<'bar' | 'line'>('bar');
 
-  // Calcular métricas
   const { totalInterviews, monthlyAverage, monthlyTarget } = useMemo(() => {
-    const total = interviewData.reduce((sum, item) => sum + item.interviews, 0);
-    const average = total / interviewData.length;
+    if (!overviewData?.interviewsByMonth?.length) {
+      return {
+        totalInterviews: 0,
+        monthlyAverage: 0,
+        monthlyTarget: 18
+      };
+    }
+
+    const interviewsData = overviewData.interviewsByMonth;
+    const total = interviewsData.reduce((sum, item) => sum + item.total, 0);
+    const average = total / interviewsData.length;
     const target = 18;
 
     return {
@@ -21,18 +33,34 @@ export function ChartsSection({ interviewData }: Readonly<ChartsSectionProps>) {
       monthlyAverage: Math.round(average * 10) / 10,
       monthlyTarget: target
     };
-  }, [interviewData]);
+  }, [overviewData]);
 
-  // Crear datos para el gráfico 
-  const barData = useMemo(() => 
-    interviewData.map((item, index) => ({
-      ...item,
+
+  const chartData = useMemo(() => {
+    if (!overviewData?.interviewsByMonth?.length) return [];
+    
+    return overviewData.interviewsByMonth.map((item, index) => ({
+      month: item.month,
+      interviews: item.total,
       id: `month-${index}-${item.month}`,
       target: monthlyTarget,
-      color: item.interviews >= monthlyTarget ? "#10B981" : "#3B82F6",
-    })),
-    [interviewData, monthlyTarget]
-  );
+      color: item.total >= monthlyTarget ? "#10B981" : "#3B82F6",
+    }));
+  }, [overviewData?.interviewsByMonth, monthlyTarget]);
+
+
+  if (!overviewData?.interviewsByMonth?.length) {
+    return (
+      <Card className="bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700 rounded-2xl shadow-xl">
+        <CardContent className="p-6">
+          <div className="text-center text-gray-400 py-12">
+            <BarChart3 className="w-12 h-12 mx-auto mb-4 opacity-50" />
+            <p>No hay datos disponibles para mostrar</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700 rounded-2xl shadow-xl">
@@ -93,7 +121,7 @@ export function ChartsSection({ interviewData }: Readonly<ChartsSectionProps>) {
           <ResponsiveContainer width="100%" height="100%">
             {activeChart === 'bar' ? (
               <BarChart 
-                data={barData} 
+                data={chartData} 
                 margin={{ top: 25, right: 50, left: 20, bottom: 10 }} 
               >
                 <CartesianGrid 
@@ -149,7 +177,7 @@ export function ChartsSection({ interviewData }: Readonly<ChartsSectionProps>) {
                   radius={[6, 6, 0, 0]}
                   barSize={100} 
                 >
-                  {barData.map((entry) => (
+                  {chartData.map((entry) => (
                     <Cell 
                       key={entry.id} 
                       fill={entry.color}
@@ -159,7 +187,7 @@ export function ChartsSection({ interviewData }: Readonly<ChartsSectionProps>) {
               </BarChart>
             ) : (
               <LineChart 
-                data={barData} 
+                data={chartData} 
                 margin={{ top: 25, right: 50, left: 20, bottom: 10 }} 
               >
                 <CartesianGrid 

@@ -1,18 +1,13 @@
-export interface InterviewData {
-  readonly month: string;
-  readonly interviews: number;
-}
+import { InterviewsByMonth } from './overview';
 
 export interface ChartsSectionProps {
-  readonly interviewData: readonly InterviewData[];
+  readonly interviewData: readonly InterviewsByMonth[];
+  readonly isLoading?: boolean;
 }
 
-export interface ChartData {
-  readonly month: string;
-  readonly interviews: number;
-}
+export type InterviewData = InterviewsByMonth;
+export type ChartData = InterviewsByMonth;
 
-// Interface para los stats
 export interface StatItem {
   readonly id: string;
   readonly title: string;

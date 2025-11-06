@@ -1,26 +1,32 @@
-/**
- * Servicio para obtener datos de candidatos desde la API
- */
 import { apiClient } from '@/lib/api';
-import { Candidate } from '../types/candidates';
-import { CandidateApiResponse } from '../types/api';
-import { mapCandidateFromApi } from '../mappers/candidates.mapper';
+import {
+  CandidateListResponse,
+  GetCandidatesParams,
+  SortByField,
+  SortOrder
+} from '../types/candidates';
 import { extractNormalizedApiError } from '@/lib/api/errors';
 
-export async function getCandidates(): Promise<Candidate[]> {
-  try {
-    const response = await apiClient.get<CandidateApiResponse>(
-      '/v1/analytics/candidates',
-      {
-        params: {
-          limit: 100,
-          sortBy: 'name',
-          order: 'ASC'
-        }
-      }
-    );
+export async function getCandidates(
+  params: GetCandidatesParams = {}
+): Promise<CandidateListResponse> {
+  const {
+    page = 1,
+    limit = 20,
+    sortBy = SortByField.AVG_SCORE,
+    order = SortOrder.DESC
+  } = params;
 
-    return response.data.data.map(mapCandidateFromApi);
+  try {
+    const response = await apiClient.get<CandidateListResponse>('/v1/analytics/candidates', {
+      params: {
+        page,
+        limit,
+        sortBy,
+        order
+      }
+    });
+    return response.data;
   } catch (error) {
     const normalizedError = extractNormalizedApiError(error);
     console.error('Error fetching candidates:', normalizedError.message);

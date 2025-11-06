@@ -1,9 +1,9 @@
-import { CandidateProfile } from "../types/candidate";
+import { CandidateProfile, CandidateUser, CandidateMetrics, ScoreHistoryItem, LatestEvaluation } from "../types/candidate";
 
-// Servicio para obtener el perfil del candidato
 export const candidateService = {
   // Método para obtener el perfil del usuario autenticado
   getMyProfile: async (userId: string, userData?: any): Promise<CandidateProfile> => {
+    // Simulando la respuesta del backend con la estructura correcta
     return candidateService.generateUserProfile(userId, userData);
   },
 
@@ -12,11 +12,10 @@ export const candidateService = {
     return candidateService.generateUserProfile(candidateId);
   },
 
-  // Generar perfil único basado en ID 
+  // Generar perfil con la estructura del backend
   generateUserProfile: (userId: string, userData?: any): CandidateProfile => {
     const simpleHash = (str: string): number => {
       if (!str || str.length === 0) return 12345;
-    
       let hash = 0;
       for (let i = 0; i < str.length; i++) {
         hash = (hash * 31 + (i + 1) * str.length) % 1000000;
@@ -26,7 +25,7 @@ export const candidateService = {
 
     const userHash = simpleHash(userId);
 
-    //mock
+    // Mock data 
     const workFields = [
       "Desarrollo Frontend", "Desarrollo Backend", "Full Stack", 
       "Mobile Development", "DevOps", "Data Science", "UX/UI Design"
@@ -43,32 +42,46 @@ export const candidateService = {
     const totalInterviews = (userHash % 8) + 1;
     const avgScore = 70 + (userHash % 25);
 
-    return {
+    const user: CandidateUser = {
+      userId: userId,
       name: userName,
+      email: userData?.email || `${userName.toLowerCase().replace(' ', '.')}@email.com`,
+      avatar: userData?.imageUrl || null,
       workField: workField,
-      yearsExperience: yearsExp,
+      customWorkField: null,
+      yearsOfExperience: yearsExp,
+      preferredLanguage: "Español",
+      registeredAt: new Date()
+    };
+
+    const metrics: CandidateMetrics = {
       totalInterviews: totalInterviews,
-      averageScore: avgScore,
-      averageDuration: 600 + (userHash % 600),
-      avatar: userData?.imageUrl,
-      interviewHistory: [
-        { date: "2024-01", score: Math.max(60, avgScore - 10) },
-        { date: "2024-02", score: Math.max(60, avgScore - 5) },
-        { date: "2024-03", score: Math.max(60, avgScore - 2) },
-        { date: "2024-04", score: avgScore },
-        { date: "2024-05", score: Math.min(99, avgScore + 3) },
-        { date: "2024-06", score: Math.min(99, avgScore + 5) }
-      ],
-      strengths: [
-        "Comunicación efectiva",
-        "Resolución de problemas", 
-        "Trabajo en equipo",
-        "Aprendizaje rápido"
-      ],
-      weaknesses: [
-        "Gestión del tiempo",
-        "Documentación técnica"
-      ]
+      completedInterviews: Math.floor(totalInterviews * 0.8),
+      inProgressInterviews: Math.floor(totalInterviews * 0.1),
+      abandonedInterviews: Math.floor(totalInterviews * 0.1),
+      avgScore: avgScore,
+      avgDuration: 600 + (userHash % 600)
+    };
+
+    const scoreHistory: ScoreHistoryItem[] = [
+      { date: "2024-01", score: Math.max(60, avgScore - 10), interviewType: "Técnica", duration: 580 },
+      { date: "2024-02", score: Math.max(60, avgScore - 5), interviewType: "Comportamental", duration: 620 },
+      { date: "2024-03", score: Math.max(60, avgScore - 2), interviewType: "Técnica", duration: 590 },
+      { date: "2024-04", score: avgScore, interviewType: "Mixta", duration: 610 },
+      { date: "2024-05", score: Math.min(99, avgScore + 3), interviewType: "Técnica", duration: 630 },
+      { date: "2024-06", score: Math.min(99, avgScore + 5), interviewType: "Final", duration: 650 }
+    ];
+
+    const latestEvaluation: LatestEvaluation = {
+      strengths: "Comunicación efectiva, Resolución de problemas, Trabajo en equipo",
+      weaknesses: "Gestión del tiempo, Documentación técnica"
+    };
+
+    return {
+      user,
+      metrics,
+      scoreHistory,
+      latestEvaluation
     };
   },
 

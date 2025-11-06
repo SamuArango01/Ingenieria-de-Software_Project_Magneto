@@ -1,13 +1,68 @@
+import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { TrendingUp } from "lucide-react";
 import { CandidateProfile } from "../types/candidate";
 
 interface ProgressChartProps {
-  readonly interviewHistory: CandidateProfile['interviewHistory'];
+  readonly scoreHistory: CandidateProfile['scoreHistory'];
 }
 
-export function ProgressChart({ interviewHistory }: ProgressChartProps) {
+interface ChartDataItem {
+  date: string;
+  score: number;
+  interviewType: string;
+  duration: number | null;
+}
+
+
+interface CustomTooltipProps {
+  readonly active?: boolean;
+  readonly payload?: ReadonlyArray<{
+    readonly payload: ChartDataItem;
+    readonly value: number;
+  }>;
+  readonly label?: string;
+}
+
+
+function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
+  if (!active || !payload?.[0]) return null;
+  
+  const data = payload[0].payload;
+  
+  return (
+    <div className="bg-slate-900/95 border border-blue-500/50 rounded-xl p-4 shadow-2xl backdrop-blur-sm">
+      <p className="text-blue-300 font-semibold mb-2">{label}</p>
+      <p className="text-white">
+        <span className="text-cyan-400">Puntuación: </span>
+        {data.score}%
+      </p>
+      <p className="text-white">
+        <span className="text-cyan-400">Tipo: </span>
+        {data.interviewType}
+      </p>
+      {data.duration && (
+        <p className="text-white">
+          <span className="text-cyan-400">Duración: </span>
+          {Math.floor(data.duration / 60)}m {data.duration % 60}s
+        </p>
+      )}
+    </div>
+  );
+}
+
+export function ProgressChart({ scoreHistory }: ProgressChartProps) {
+
+  const chartData = useMemo(() => {
+    return scoreHistory.map(item => ({
+      date: item.date,
+      score: item.score,
+      interviewType: item.interviewType,
+      duration: item.duration
+    }));
+  }, [scoreHistory]);
+
   return (
     <Card className="bg-gradient-to-br from-gray-900 via-blue-900/20 to-gray-900 border-blue-500/20 rounded-3xl shadow-2xl backdrop-blur-sm">
       <CardHeader className="border-b border-blue-500/10 pb-5">
@@ -27,7 +82,7 @@ export function ProgressChart({ interviewHistory }: ProgressChartProps) {
       </CardHeader>
       <CardContent className="p-6">
         <ResponsiveContainer width="100%" height={320}>
-          <LineChart data={interviewHistory}>
+          <LineChart data={chartData}>
             <CartesianGrid 
               strokeDasharray="2 4" 
               stroke="#1E40AF"
@@ -50,23 +105,7 @@ export function ProgressChart({ interviewHistory }: ProgressChartProps) {
               axisLine={false}
               tick={{ fill: '#93C5FD' }}
             />
-            <Tooltip
-              contentStyle={{ 
-                backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                border: '1px solid rgba(59, 130, 246, 0.5)',
-                borderRadius: '12px',
-                color: '#FFFFFF',
-                backdropFilter: 'blur(12px)',
-                boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)',
-                fontSize: '14px'
-              }}
-              labelStyle={{ 
-                color: '#BFDBFE', 
-                fontWeight: "600",
-                marginBottom: '8px'
-              }}
-              itemStyle={{ color: '#60A5FA' }}
-            />
+            <Tooltip content={<CustomTooltip />} />
             <Line
               type="monotone"
               dataKey="score"
