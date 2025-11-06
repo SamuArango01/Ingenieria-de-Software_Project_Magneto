@@ -19,7 +19,7 @@ export function useCandidates(params: GetCandidatesParams = {}) {
     queryKey: ["candidates", params],
     queryFn: () => getCandidates(params),
     staleTime: 3 * 60 * 1000, // 3 minutos
-    gcTime: 5 * 60 * 1000, // 5 minutos
+    gcTime: 5 * 60 * 1000, // 5 minutos 
     retry: 2,
     retryDelay: 1000,
   });
@@ -40,7 +40,7 @@ export function useCandidates(params: GetCandidatesParams = {}) {
   };
 }
 
-// Tipos para filtros de cliente
+// Tipos para filtros 
 interface ClientFilters {
   searchTerm?: string;
   workField?: string;
@@ -87,7 +87,7 @@ const matchesMinInterviews = (candidate: CandidateListResponse['data'][0], minIn
   return candidate.completedInterviews >= minInterviews;
 };
 
-// Hook adicional para filtrado en cliente
+// Hook adicional para filtrado
 export function useCandidatesWithClientFilters(
   params: GetCandidatesParams = {},
   clientFilters?: ClientFilters
