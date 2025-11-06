@@ -50,6 +50,22 @@ export const sidebarConfig: SidebarItem[] = [
     ],
   },
   {
+    title: "Candidatos",
+    icon: Users,
+    children: [
+      {
+        title: "Vista General",
+        href: "/rrhh/general",
+        icon: List,
+      },
+      {
+        title: "Resumen",
+        href: "/rrhh/overview",
+        icon: BarChart2,
+      },
+    ],
+  },
+  {
     title: "Reportes",
     href: "/entrevistador/reportes",
     icon: FileText,
