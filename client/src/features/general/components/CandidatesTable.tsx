@@ -247,7 +247,7 @@ export function CandidatesTable({ candidates }: Props) {
                   variant="outline" 
                   className="border-blue-400/50 text-blue-300 bg-blue-500/5 hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-600 hover:text-white hover:border-transparent hover:scale-105 transition-all duration-300 font-medium rounded-lg px-4 py-2 backdrop-blur-sm shadow-lg"
                 >
-                  <Link href={`/rrhh/candidatos/${candidate.userId}`}>
+                  <Link href={`/rrhh/candidates/${candidate.userId}`}>
                     Ver Perfil
                   </Link>
                 </Button>

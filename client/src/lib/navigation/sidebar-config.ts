@@ -7,6 +7,7 @@ import {
   FileText,
   BarChart2,
   Settings,
+  User,
 } from 'lucide-react';
 
 export interface SidebarSubItem {
@@ -27,6 +28,17 @@ export const sidebarConfig: SidebarItem[] = [
     title: "Dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
+  },
+  {
+    title: "Candidato",
+    icon: User,
+    children: [
+      {
+        title: "Mi Perfil",
+        href: "/profile",
+        icon: User,
+      },
+    ],
   },
   {
     title: "Entrevistas",
