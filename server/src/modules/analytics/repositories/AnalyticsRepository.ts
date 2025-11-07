@@ -52,19 +52,21 @@ export class AnalyticsRepository implements IAnalyticsRepository {
       .addGroupBy('uc.years_of_experience');
 
     // Aplicar ordenamiento
+    // En PostgreSQL, cuando se usa un alias en ORDER BY después de GROUP BY,
+    // necesitamos usar la expresión completa o el alias entre comillas
     let orderByField: string;
     switch (sortBy) {
       case SortByField.AVG_SCORE:
-        orderByField = 'avgScore';
+        orderByField = 'AVG(CASE WHEN i.score IS NOT NULL THEN i.score END)';
         break;
       case SortByField.NAME:
-        orderByField = 'name';
+        orderByField = 'u.name';
         break;
       case SortByField.LAST_INTERVIEW:
-        orderByField = 'lastInterviewDate';
+        orderByField = 'MAX(i.completed_at)';
         break;
       default:
-        orderByField = 'avgScore';
+        orderByField = 'AVG(CASE WHEN i.score IS NOT NULL THEN i.score END)';
     }
 
     queryBuilder.orderBy(orderByField, order, 'NULLS LAST');
