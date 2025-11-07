@@ -1,13 +1,13 @@
 import { CandidateProfile } from "@/features/profile/CandidateProfile";
 
 interface PageProps {
-  params: {
+  params: Promise<{
     userId: string;
-  };
+  }>;
 }
 
-export default function CandidateProfilePage({ params }: Readonly<PageProps>) {
-  const { userId } = params;
+export default async function CandidateProfilePage({ params }: Readonly<PageProps>) {
+  const { userId } = await params;
 
   if (!userId) {
     return (

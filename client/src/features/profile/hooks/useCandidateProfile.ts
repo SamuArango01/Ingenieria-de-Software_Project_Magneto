@@ -7,15 +7,15 @@ export const useCandidateProfile = (candidateId?: string) => {
   const { user, isLoaded } = useUser();
 
   return useQuery({
-    queryKey: ["candidateProfile", candidateId || user?.id],
-    queryFn: async (): Promise<CandidateProfile> => {
-      if (candidateId) {
-        return candidateService.getCandidateProfile(candidateId);
-      }
-      
-      if (!user?.id) throw new Error("No autenticado");
-      return candidateService.getMyProfile(user.id, user);
-    },
+    queryKey: candidateId
+      ? ["candidateProfile", "other", candidateId]
+      : ["candidateProfile", "own", user?.id],
+    queryFn: candidateId
+      ? () => candidateService.getCandidateProfile(candidateId)
+      : async (): Promise<CandidateProfile> => {
+          if (!user?.id) throw new Error("No autenticado");
+          return candidateService.getMyProfile(user.id);
+        },
     enabled: isLoaded && (!!candidateId || !!user?.id),
     retry: 2,
     retryDelay: 1000,

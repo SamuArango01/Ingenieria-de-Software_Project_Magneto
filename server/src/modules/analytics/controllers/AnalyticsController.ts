@@ -3,6 +3,8 @@ import { getAuth } from '@clerk/express';
 import type { IAnalyticsService } from '@/modules/analytics/interfaces/IAnalyticsService';
 import { AnalyticsService } from '@/modules/analytics/services/AnalyticsService';
 import { GetCandidatesDto, SortByField, SortOrder } from '@/modules/analytics/dto/GetCandidatesDto';
+import { UserRoleService } from '@/modules/roles/services/UserRoleService';
+import { RoleType } from '@/modules/roles/entities/UserRole';
 
 export class AnalyticsController {
   private analyticsService: IAnalyticsService;
@@ -68,6 +70,8 @@ export class AnalyticsController {
   /**
    * GET /api/v1/analytics/candidates/:userId
    * Obtiene detalle completo de un candidato
+   * - Si eres RECRUITER: devuelve el perfil del userId solicitado
+   * - Si NO eres RECRUITER: devuelve tu propio perfil (ignora el userId del parámetro)
    */
   async getCandidateDetail(req: Request, res: Response): Promise<void> {
     const { userId: authUserId } = getAuth(req);
@@ -77,14 +81,36 @@ export class AnalyticsController {
     }
 
     try {
-      const { userId } = req.params;
+      const { userId: requestedUserId } = req.params;
 
-      if (!userId) {
+      if (!requestedUserId) {
         res.status(400).json({ message: 'User ID parameter is required' });
         return;
       }
 
-      const result = await this.analyticsService.getCandidateDetail(userId);
+      // Verificar si el usuario autenticado es recruiter
+      const userRoleService = new UserRoleService();
+      const roleResult = await userRoleService.hasRole(authUserId, RoleType.RECRUITER);
+
+      let targetUserId: string;
+
+      roleResult.match(
+        (isRecruiter) => {
+          if (isRecruiter) {
+            // Si es recruiter, puede ver el perfil solicitado
+            targetUserId = requestedUserId;
+          } else {
+            // Si NO es recruiter (es candidate), solo puede ver su propio perfil
+            targetUserId = authUserId;
+          }
+        },
+        () => {
+          // En caso de error al verificar rol, por seguridad solo mostrar propio perfil
+          targetUserId = authUserId;
+        }
+      );
+
+      const result = await this.analyticsService.getCandidateDetail(targetUserId);
 
       result.match(
         (response) => res.json(response),

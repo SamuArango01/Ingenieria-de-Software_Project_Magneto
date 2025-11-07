@@ -1,6 +1,5 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,12 +15,6 @@ interface ProfileHeaderProps {
 }
 
 export function ProfileHeader({ profile, performance }: ProfileHeaderProps) {
-  const { user } = useUser();
-
-  // Usar la información del usuario de Clerk
-  const userAvatar = user?.imageUrl || profile.user.avatar;
-  const userEmail = user?.primaryEmailAddress?.emailAddress || profile.user.email;
-
   // Helper para obtener iniciales del nombre
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
@@ -33,9 +26,9 @@ export function ProfileHeader({ profile, performance }: ProfileHeaderProps) {
         <div className="flex flex-col md:flex-row items-center gap-8">
           <div className="relative">
             <Avatar className="h-36 w-36 ring-4 ring-purple-500/30 shadow-xl">
-              <AvatarImage src={userAvatar || undefined} className="object-cover" />
+              <AvatarImage src={profile.user.avatar || undefined} className="object-cover" />
               <AvatarFallback className="bg-gradient-to-br from-purple-600 to-pink-600 text-white text-3xl font-bold">
-                {getInitials(user?.fullName || profile.user.name)}
+                {getInitials(profile.user.name)}
               </AvatarFallback>
             </Avatar>
             <div className="absolute -bottom-3 -right-3">
@@ -44,19 +37,19 @@ export function ProfileHeader({ profile, performance }: ProfileHeaderProps) {
               </Badge>
             </div>
           </div>
-          
+
           <div className="flex-1 text-center md:text-left">
             <h1 className="text-4xl font-bold text-white mb-3 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-              {user?.fullName || profile.user.name}
+              {profile.user.name}
             </h1>
             <p className="text-xl text-gray-300 mb-6 font-medium">
               {profile.user.customWorkField || profile.user.workField || "Desarrollo de Software"}
             </p>
-            
+
             <div className="flex flex-col gap-3 mb-6">
               <div className="flex items-center gap-3 text-gray-400 bg-gray-800/50 rounded-xl p-3 border border-gray-700/50 w-fit">
                 <Mail className="w-5 h-5 text-purple-400" />
-                <span className="text-lg">{userEmail}</span>
+                <span className="text-lg">{profile.user.email}</span>
               </div>
             </div>
             

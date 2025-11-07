@@ -7,16 +7,14 @@ const router = Router();
 const analyticsService = new AnalyticsService();
 const analyticsController = new AnalyticsController(analyticsService);
 
-// Todas las rutas de analytics requieren rol de recruiter
-router.use(requireRecruiter);
-
-// GET /api/v1/analytics/candidates - Lista paginada de candidatos
-router.get('/candidates', (req, res) => analyticsController.getCandidates(req, res));
+// GET /api/v1/analytics/candidates - Lista paginada de candidatos (solo recruiters)
+router.get('/candidates', requireRecruiter, (req, res) => analyticsController.getCandidates(req, res));
 
 // GET /api/v1/analytics/candidates/:userId - Detalle de un candidato
+// Permite acceso a recruiters (ven cualquier perfil) y candidates (solo su propio perfil)
 router.get('/candidates/:userId', (req, res) => analyticsController.getCandidateDetail(req, res));
 
-// GET /api/v1/analytics/overview - Métricas generales del sistema
-router.get('/overview', (req, res) => analyticsController.getOverview(req, res));
+// GET /api/v1/analytics/overview - Métricas generales del sistema (solo recruiters)
+router.get('/overview', requireRecruiter, (req, res) => analyticsController.getOverview(req, res));
 
 export default router;
