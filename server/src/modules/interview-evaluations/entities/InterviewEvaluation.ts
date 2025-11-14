@@ -1,3 +1,4 @@
+// src/modules/interview-evaluations/entities/InterviewEvaluation.ts
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from "typeorm";
 import { Interview } from "@/modules/interviews/entities/Interview";
 
@@ -17,10 +18,10 @@ export class InterviewEvaluation {
     areasToImprove: string;
 
     @Column({ type: "text", nullable: true })
-    strengths: string;
+    strengths: string | null; // ✅ Permitir string o null
 
     @Column({ name: "ai_feedback", type: "text", nullable: true })
-    aiFeedback: string;
+    aiFeedback: string | null; // ✅ Permitir string o null
 
     @CreateDateColumn({ name: "created_at" })
     createdAt: Date;

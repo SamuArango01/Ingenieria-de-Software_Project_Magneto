@@ -6,6 +6,7 @@ const ProtectedRoutes = [
   "/setup-role",
   "/dashboard",
   "/entrevistador",
+  "/rrhh",
   "/profile",
   "/settings",
 ];

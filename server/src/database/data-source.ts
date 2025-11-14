@@ -7,6 +7,7 @@ import { InterviewType } from "@/modules/interview-types/entities/InterviewType"
 import { Interview } from "@/modules/interviews/entities/Interview";
 import { InterviewEvaluation } from "@/modules/interview-evaluations/entities/InterviewEvaluation";
 import { InterviewQA } from "@/modules/interview-qa/entities/InterviewQA";
+import { UserRole } from "@/modules/roles/entities/UserRole";
 
 export const AppDataSource = new DataSource({
     type: "postgres",
@@ -24,7 +25,8 @@ export const AppDataSource = new DataSource({
         InterviewType,
         Interview,
         InterviewEvaluation,
-        InterviewQA
+        InterviewQA,
+        UserRole
     ],
     migrations: [],
     subscribers: [],
