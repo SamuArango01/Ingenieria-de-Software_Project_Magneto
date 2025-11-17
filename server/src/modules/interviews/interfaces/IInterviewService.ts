@@ -43,7 +43,8 @@ export interface IInterviewService {
 
     evaluateInterview(
         interviewHistory: Array<{ user: string; ai: string }>,
-        candidateMetricsHistory: any[]
+        candidateMetricsHistory: any[],
+        interviewId?: number
     ): Promise<Result<{
         wouldPass: boolean;
         score: number;
