@@ -34,6 +34,7 @@ export function InterviewSummary() {
         const result = await evaluateInterview({
           interviewHistory,
           candidateMetricsHistory,
+          interviewId,
         });
         setEvaluation(result);
       } catch (error) {

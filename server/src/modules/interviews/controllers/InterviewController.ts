@@ -238,7 +238,7 @@ export class InterviewController {
                 return;
             }
 
-            const { interviewHistory, candidateMetricsHistory } = req.body;
+            const { interviewHistory, candidateMetricsHistory, interviewId } = req.body;
 
             if (!interviewHistory || !Array.isArray(interviewHistory)) {
                 res.status(400).json({
@@ -250,7 +250,8 @@ export class InterviewController {
 
             const result = await this.interviewService.evaluateInterview(
                 interviewHistory,
-                candidateMetricsHistory || []
+                candidateMetricsHistory || [],
+                interviewId ? Number(interviewId) : undefined
             );
 
             result.match(

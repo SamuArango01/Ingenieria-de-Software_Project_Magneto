@@ -3,6 +3,7 @@ import { InterviewType } from "@/modules/interview-types/entities/InterviewType"
 import type { IInterviewTypeRepository } from "@/modules/interview-types/interfaces/IInterviewTypeRepository";
 import type { IInterviewTypeService } from "@/modules/interview-types/interfaces/IInterviewTypeService";
 import { InterviewTypeRepository } from "@/modules/interview-types/repositories/InterviewTypeRepository";
+import { moderateContent } from "../../../../helpers/GenerateContent";
 
 // Custom Error Types
 type InterviewTypeNotFoundError = { type: 'InterviewTypeNotFoundError'; message: string };
@@ -23,6 +24,16 @@ export class InterviewTypeService implements IInterviewTypeService {
     async createInterviewType(userId: string, name: string, description?: string): Promise<Result<InterviewType, ValidationError>> {
         if (!name) {
             return err({ type: 'ValidationError', message: 'Name is required' });
+        }
+
+        // Validar contenido inapropiado con Gemini
+        const moderationResult = await moderateContent(name, description);
+
+        if (moderationResult.isInappropriate) {
+            return err({
+                type: 'ValidationError',
+                message: `Contenido inapropiado detectado: ${moderationResult.reason || 'El contenido no es apropiado para un contexto profesional'}`
+            });
         }
 
         const newInterviewType = this.repository.create({
@@ -63,6 +74,16 @@ export class InterviewTypeService implements IInterviewTypeService {
 
         if (userId !== interviewType.createdBy){
             return err({ type: 'InterviewTypeNotFoundError', message: "You don't have permission to update this interview type" });
+        }
+
+        // Validar contenido inapropiado con Gemini
+        const moderationResult = await moderateContent(name, description);
+
+        if (moderationResult.isInappropriate) {
+            return err({
+                type: 'ValidationError',
+                message: `Contenido inapropiado detectado: ${moderationResult.reason || 'El contenido no es apropiado para un contexto profesional'}`
+            });
         }
 
         interviewType.name = name;

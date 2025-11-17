@@ -200,7 +200,8 @@ Keep it conversational, engaging, and appropriate for the difficulty level.`;
 
     async evaluateInterview(
         interviewHistory: Array<{ user: string; ai: string }>,
-        candidateMetricsHistory: any[]
+        candidateMetricsHistory: any[],
+        interviewId?: number
     ): Promise<Result<{
         wouldPass: boolean;
         score: number;
@@ -231,6 +232,18 @@ Keep it conversational, engaging, and appropriate for the difficulty level.`;
                 contentScore,
                 vocalScore
             );
+
+            // Si aprueba y se proporcionó el interviewId, marcar como completada
+            if (wouldPass && interviewId) {
+                await this.interviewRepository.updateStatus(
+                    interviewId,
+                    'completed',
+                    overallScore
+                );
+                console.log(`✅ Entrevista #${interviewId} marcada como completada con score: ${overallScore}`);
+            } else if (interviewId) {
+                console.log(`⚠️ Entrevista #${interviewId} NO aprobada (score: ${overallScore}). No se marca como completada.`);
+            }
 
             return ok({
                 wouldPass,
