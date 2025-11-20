@@ -10,7 +10,9 @@ import { useInterviewTTS } from "../contexts/InterviewTTSContext";
 import { useSocketConnection } from "./hooks/useSocketConnection";
 import { useAudioRecorder } from "./hooks/useAudioRecorder";
 import { useAudioPlayback } from "./hooks/useAudioPlayback";
+import { useStreamingAudioPlayback } from "./hooks/useStreamingAudioPlayback";
 import VoiceVisualizer from "./components/VoiceVisualizer";
+import { ConversationTranscript } from "./components/ConversationTranscript";
 
 export default function InterviewTTSSession() {
   const router = useRouter();
@@ -25,12 +27,14 @@ export default function InterviewTTSSession() {
     socket,
     startInterview,
     setIsRecording: setContextRecording,
+    isStreamingAudio,
   } = useInterviewTTS();
 
   const { socket: socketInstance } = useSocketConnection();
   const { isRecording, audioBlob, startRecording, stopRecording, resetRecording } =
     useAudioRecorder();
   const { playAudioFromBase64 } = useAudioPlayback();
+  const { enqueueAudioChunk } = useStreamingAudioPlayback();
 
   // Start interview automatically when connected
   useEffect(() => {
@@ -61,9 +65,14 @@ export default function InterviewTTSSession() {
   // Play AI audio when available
   useEffect(() => {
     if (currentAudio) {
-      playAudioFromBase64(currentAudio);
+      // If streaming mode, enqueue chunks; otherwise play complete audio
+      if (isStreamingAudio) {
+        enqueueAudioChunk(currentAudio);
+      } else {
+        playAudioFromBase64(currentAudio);
+      }
     }
-  }, [currentAudio, playAudioFromBase64]);
+  }, [currentAudio, playAudioFromBase64, enqueueAudioChunk, isStreamingAudio]);
 
   const handleMicClick = () => {
     if (!interviewId) {
@@ -123,33 +132,42 @@ export default function InterviewTTSSession() {
         </Badge>
       </div>
 
-      {/* Main content - Voice Visualizer */}
-      <div className="flex-1 flex items-center justify-center">
-        <div
-          onClick={handleMicClick}
-          className={interviewId ? "cursor-pointer" : "cursor-not-allowed opacity-50"}
-        >
-          <VoiceVisualizer isRecording={isRecording} isProcessing={isProcessing} />
+      {/* Main container with two columns */}
+      <div className="flex-1 flex items-stretch px-4 gap-4">
+        {/* Left side: Conversation Transcript */}
+        <div className="w-1/2 flex items-center">
+          <ConversationTranscript />
         </div>
-        {!interviewId && (
-          <div className="absolute bottom-1/3">
-            <Badge variant="outline" className="px-4 py-2">
-              Iniciando entrevista...
-            </Badge>
-          </div>
-        )}
-      </div>
 
-      {/* Processing status */}
-      {processingStatus && (
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 mt-32">
-          <Badge variant="outline" className="px-4 py-2">
-            {processingStatus === "transcribing" && "Transcribiendo audio..."}
-            {processingStatus === "generating_response" && "Generando respuesta..."}
-            {processingStatus === "generating_audio" && "Generando audio..."}
-          </Badge>
+        {/* Right side: Voice Visualizer */}
+        <div className="w-1/2 flex items-center justify-center relative">
+          <div
+            onClick={handleMicClick}
+            className={interviewId ? "cursor-pointer" : "cursor-not-allowed opacity-50"}
+          >
+            <VoiceVisualizer isRecording={isRecording} isProcessing={isProcessing} />
+          </div>
+          {!interviewId && (
+            <div className="absolute top-2/3">
+              <Badge variant="outline" className="px-4 py-2">
+                Iniciando entrevista...
+              </Badge>
+            </div>
+          )}
+
+          {/* Processing status */}
+          {processingStatus && (
+            <div className="absolute top-1/4">
+              <Badge variant="outline" className="px-4 py-2">
+                {processingStatus === "transcribing" && "Transcribiendo audio..."}
+                {processingStatus === "generating_response" && "Generando respuesta..."}
+                {processingStatus === "generating_audio" && "Generando audio..."}
+                {processingStatus === "streaming_response" && "Respuesta en tiempo real..."}
+              </Badge>
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
       {/* Footer with end button */}
       <div className="w-full p-6 flex justify-end">

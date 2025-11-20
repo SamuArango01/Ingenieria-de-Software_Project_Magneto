@@ -25,7 +25,17 @@ export class InterviewTTSSocketController {
 
     private setupEventHandlers(): void {
         this.socket.on("start_interview", this.handleStartInterview.bind(this));
-        this.socket.on("audio_message", this.handleAudioMessage.bind(this));
+
+        // Use streaming mode if enabled via environment variable
+        const useStreaming = process.env.TTS_STREAMING_MODE === "true";
+        if (useStreaming) {
+            this.socket.on("audio_message", this.handleAudioMessageStream.bind(this));
+            console.log(`[Socket.IO] Streaming mode ENABLED for user: ${this.socket.data.userId}`);
+        } else {
+            this.socket.on("audio_message", this.handleAudioMessage.bind(this));
+            console.log(`[Socket.IO] Streaming mode DISABLED for user: ${this.socket.data.userId}`);
+        }
+
         this.socket.on("end_interview", this.handleEndInterview.bind(this));
         this.socket.on("disconnect", this.handleDisconnect.bind(this));
     }
@@ -188,6 +198,173 @@ export class InterviewTTSSocketController {
 
         } catch (error) {
             console.error("Error in handleAudioMessage:", error);
+            this.socket.emit("error", { message: "An error occurred while processing your message" });
+        }
+    }
+
+    /**
+     * Handle audio message from user with STREAMING support
+     * Streams AI text chunks in real-time and synthesizes audio incrementally
+     */
+    private async handleAudioMessageStream(data: { audio: string }): Promise<void> {
+        try {
+            if (!this.currentInterviewId) {
+                this.socket.emit("error", { message: "No active interview" });
+                return;
+            }
+
+            // Emit processing state
+            this.socket.emit("processing", { status: "transcribing" });
+
+            // Convert base64 to buffer
+            const userAudioBuffer = Buffer.from(data.audio, 'base64');
+
+            // Transcribe audio
+            const transcript = await this.deepgramService.transcribeAudio(userAudioBuffer);
+
+            if (!transcript || transcript.trim().length === 0) {
+                this.socket.emit("error", { message: "Could not transcribe audio" });
+                return;
+            }
+
+            // Save user message
+            await this.interviewService.saveMessage({
+                interviewId: this.currentInterviewId,
+                role: "user",
+                message: transcript
+            });
+
+            // Emit transcription
+            this.socket.emit("transcription", { text: transcript });
+
+            // Emit processing state
+            this.socket.emit("processing", { status: "generating_response" });
+
+            // Stream AI response with incremental TTS
+            let fullMessage = "";
+            let sentenceBuffer = "";
+            const sentenceEndings = /[.!?]\s/;
+
+            try {
+                for await (const { chunk, fullText } of this.interviewService.generateAIResponseStream(
+                    this.currentInterviewId,
+                    transcript
+                )) {
+                    // Accumulate chunks
+                    sentenceBuffer += chunk;
+
+                    // Check if we have a complete sentence
+                    if (sentenceEndings.test(sentenceBuffer)) {
+                        const sentences = sentenceBuffer.split(sentenceEndings);
+
+                        // Process all complete sentences
+                        for (let i = 0; i < sentences.length - 1; i++) {
+                            const sentence = sentences[i].trim();
+                            if (sentence.length > 0) {
+                                // Emit text chunk to client immediately
+                                this.socket.emit("ai_text_chunk", { text: sentence });
+
+                                // Generate audio for this sentence in parallel
+                                try {
+                                    const audioBuffer = await this.ttsService.textToSpeech(sentence);
+                                    this.socket.emit("ai_audio_chunk", {
+                                        audio: audioBuffer.toString('base64')
+                                    });
+                                } catch (ttsError) {
+                                    console.error("Error generating audio chunk:", ttsError);
+                                    // Continue streaming even if one chunk fails
+                                }
+                            }
+                        }
+
+                        // Keep the last incomplete sentence in buffer
+                        sentenceBuffer = sentences[sentences.length - 1];
+                    }
+
+                    fullMessage = fullText;
+                }
+
+                // Process any remaining text in buffer
+                if (sentenceBuffer.trim().length > 0) {
+                    this.socket.emit("ai_text_chunk", { text: sentenceBuffer });
+                    try {
+                        const audioBuffer = await this.ttsService.textToSpeech(sentenceBuffer);
+                        this.socket.emit("ai_audio_chunk", {
+                            audio: audioBuffer.toString('base64')
+                        });
+                    } catch (ttsError) {
+                        console.error("Error generating final audio chunk:", ttsError);
+                    }
+                }
+
+            } catch (streamError) {
+                console.error("Error in AI streaming:", streamError);
+                this.socket.emit("error", { message: "Failed to generate AI response" });
+                return;
+            }
+
+            // Parse the full response to get metadata (shouldEnd, reason, etc.)
+            let aiResponse;
+            try {
+                // The generator returns the parsed AIResponseData
+                const generator = this.interviewService.generateAIResponseStream(
+                    this.currentInterviewId,
+                    transcript
+                );
+
+                // Consume the generator to get the return value
+                let result = await generator.next();
+                while (!result.done) {
+                    result = await generator.next();
+                }
+                aiResponse = result.value;
+            } catch (error) {
+                console.error("Error parsing AI response:", error);
+                aiResponse = {
+                    message: fullMessage,
+                    shouldEnd: false
+                };
+            }
+
+            // Save AI message
+            await this.interviewService.saveMessage({
+                interviewId: this.currentInterviewId,
+                role: "ai",
+                message: aiResponse.message
+            });
+
+            // Check if interview should end
+            if (aiResponse.shouldEnd) {
+                // End the interview
+                await this.interviewService.endInterview(
+                    this.currentInterviewId,
+                    true,
+                    aiResponse.reason
+                );
+
+                // Emit stream complete with metadata
+                this.socket.emit("ai_response_complete", {
+                    shouldEnd: true,
+                    reason: aiResponse.reason
+                });
+
+                // Emit interview ended event
+                this.socket.emit("interview_ended", {
+                    interviewId: this.currentInterviewId,
+                    reason: aiResponse.reason || "Interview completed"
+                });
+
+                this.currentInterviewId = null;
+                return;
+            }
+
+            // Emit stream complete
+            this.socket.emit("ai_response_complete", {
+                shouldEnd: false
+            });
+
+        } catch (error) {
+            console.error("Error in handleAudioMessageStream:", error);
             this.socket.emit("error", { message: "An error occurred while processing your message" });
         }
     }

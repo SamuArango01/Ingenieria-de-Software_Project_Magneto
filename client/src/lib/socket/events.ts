@@ -11,6 +11,7 @@ export interface ClientToServerEvents {
 
 // Server -> Client events
 export interface ServerToClientEvents {
+  // Non-streaming events (original)
   interview_started: (data: {
     interviewId: number;
     message: string;
@@ -26,4 +27,9 @@ export interface ServerToClientEvents {
   }) => void;
   interview_ended: (data: { interviewId: number; reason: string }) => void;
   error: (data: { message: string }) => void;
+
+  // Streaming events (new)
+  ai_text_chunk: (data: { text: string }) => void;
+  ai_audio_chunk: (data: { audio: string }) => void;
+  ai_response_complete: (data: { shouldEnd: boolean; reason?: string }) => void;
 }

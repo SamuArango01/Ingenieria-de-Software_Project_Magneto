@@ -18,6 +18,10 @@ export function useSocketConnection() {
     setCurrentAudio,
     startTimer,
     pauseTimer,
+    appendTextChunk,
+    setIsStreamingText,
+    setIsStreamingAudio,
+    finalizeStreamingMessage,
   } = useInterviewTTS();
 
   useEffect(() => {
@@ -85,6 +89,36 @@ export function useSocketConnection() {
           alert(`Error: ${data.message}`);
         });
 
+        // Streaming Events
+        // Event: ai_text_chunk
+        socketInstance.on("ai_text_chunk", (data) => {
+          console.log("Received text chunk:", data.text);
+          appendTextChunk(data.text);
+          setIsStreamingText(true);
+          setProcessingStatus("streaming_response");
+        });
+
+        // Event: ai_audio_chunk
+        socketInstance.on("ai_audio_chunk", (data) => {
+          console.log("Received audio chunk");
+          setCurrentAudio(data.audio);
+          setIsStreamingAudio(true);
+        });
+
+        // Event: ai_response_complete
+        socketInstance.on("ai_response_complete", (data) => {
+          console.log("AI response complete");
+          finalizeStreamingMessage();
+          setIsStreamingAudio(false);
+          setProcessingStatus(null);
+
+          if (data.shouldEnd) {
+            // Interview ended by AI
+            pauseTimer();
+            console.log("Interview ended by AI:", data.reason);
+          }
+        });
+
         // Event: connect
         socketInstance.on("connect", () => {
           console.log("Socket connected");
@@ -108,7 +142,21 @@ export function useSocketConnection() {
         setSocket(null);
       }
     };
-  }, [getToken, setSocket, setInterviewId, addMessage, setProcessingStatus, setCurrentAudio, startTimer, pauseTimer, router]);
+  }, [
+    getToken,
+    setSocket,
+    setInterviewId,
+    addMessage,
+    setProcessingStatus,
+    setCurrentAudio,
+    startTimer,
+    pauseTimer,
+    appendTextChunk,
+    setIsStreamingText,
+    setIsStreamingAudio,
+    finalizeStreamingMessage,
+    router,
+  ]);
 
   return { socket };
 }

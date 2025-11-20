@@ -26,6 +26,16 @@ interface InterviewTTSContextType extends InterviewTTSState {
   // Audio
   setCurrentAudio: (audio: string | null) => void;
 
+  // Streaming state
+  streamingMessage: string;
+  isStreamingText: boolean;
+  isStreamingAudio: boolean;
+  appendTextChunk: (chunk: string) => void;
+  setIsStreamingText: (isStreaming: boolean) => void;
+  setIsStreamingAudio: (isStreaming: boolean) => void;
+  finalizeStreamingMessage: () => void;
+  clearStreamingState: () => void;
+
   // Timer
   startTimer: () => void;
   pauseTimer: () => void;
@@ -51,6 +61,11 @@ export function InterviewTTSProvider({ children }: { children: React.ReactNode }
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [currentAudio, setCurrentAudio] = useState<string | null>(null);
+
+  // Streaming state
+  const [streamingMessage, setStreamingMessage] = useState<string>("");
+  const [isStreamingText, setIsStreamingText] = useState(false);
+  const [isStreamingAudio, setIsStreamingAudio] = useState(false);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -138,6 +153,25 @@ export function InterviewTTSProvider({ children }: { children: React.ReactNode }
     }
   }, []);
 
+  // Streaming functions
+  const appendTextChunk = useCallback((chunk: string) => {
+    setStreamingMessage((prev) => prev + chunk);
+  }, []);
+
+  const finalizeStreamingMessage = useCallback(() => {
+    if (streamingMessage.trim().length > 0) {
+      addMessage("ai", streamingMessage);
+      setStreamingMessage("");
+    }
+    setIsStreamingText(false);
+  }, [streamingMessage, addMessage]);
+
+  const clearStreamingState = useCallback(() => {
+    setStreamingMessage("");
+    setIsStreamingText(false);
+    setIsStreamingAudio(false);
+  }, []);
+
   const reset = useCallback(() => {
     setInterviewId(null);
     setInterviewTypeId(null);
@@ -146,8 +180,9 @@ export function InterviewTTSProvider({ children }: { children: React.ReactNode }
     setProcessingStatusState(null);
     setMessages([]);
     setCurrentAudio(null);
+    clearStreamingState();
     resetTimer();
-  }, [resetTimer]);
+  }, [resetTimer, clearStreamingState]);
 
   const value: InterviewTTSContextType = {
     socket,
@@ -162,6 +197,9 @@ export function InterviewTTSProvider({ children }: { children: React.ReactNode }
     elapsedTime,
     isTimerRunning,
     currentAudio,
+    streamingMessage,
+    isStreamingText,
+    isStreamingAudio,
     startInterview,
     endInterview,
     setInterviewId,
@@ -169,6 +207,11 @@ export function InterviewTTSProvider({ children }: { children: React.ReactNode }
     setIsRecording,
     setProcessingStatus,
     setCurrentAudio,
+    appendTextChunk,
+    setIsStreamingText,
+    setIsStreamingAudio,
+    finalizeStreamingMessage,
+    clearStreamingState,
     startTimer,
     pauseTimer,
     resetTimer,
