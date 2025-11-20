@@ -30,17 +30,6 @@ export const sidebarConfig: SidebarItem[] = [
     icon: LayoutDashboard,
   },
   {
-    title: "Candidato",
-    icon: User,
-    children: [
-      {
-        title: "Mi Perfil",
-        href: "/profile",
-        icon: User,
-      },
-    ],
-  },
-  {
     title: "Entrevistas",
     href: "/entrevistador/init",
     icon: Users,
