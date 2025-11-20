@@ -1,0 +1,50 @@
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from "typeorm";
+import { User } from "@/modules/users/entities/User";
+import { InterviewType } from "@/modules/interview-types/entities/InterviewType";
+
+@Entity("interviews_tts")
+export class InterviewTTS {
+    @PrimaryGeneratedColumn()
+    id: number;
+
+    @Column({ name: "user_id" })
+    userId: string;
+
+    @ManyToOne(() => User)
+    @JoinColumn({ name: "user_id" })
+    user: User;
+
+    @Column({ name: "interview_type_id", nullable: true })
+    interviewTypeId: number | null;
+
+    @ManyToOne(() => InterviewType)
+    @JoinColumn({ name: "interview_type_id" })
+    interviewType: InterviewType;
+
+    @Column({ type: "decimal", precision: 5, scale: 2, nullable: true })
+    score: number;
+
+    @Column({ name: "duration_minutes", nullable: true })
+    durationMinutes: number;
+
+    @Column({ default: "in_progress" })
+    status: string; // "in_progress", "completed", "interrupted"
+
+    @Column({ name: "topics_covered", type: "text", nullable: true })
+    topicsCovered: string; // JSON string of covered topics
+
+    @Column({ name: "ended_by_ai", default: false })
+    endedByAI: boolean; // Whether AI decided to end the interview
+
+    @Column({ name: "end_reason", type: "text", nullable: true })
+    endReason: string; // Reason why interview ended (if by AI)
+
+    @CreateDateColumn({ name: "started_at" })
+    startedAt: Date;
+
+    @Column({ name: "completed_at", nullable: true })
+    completedAt: Date;
+
+    @CreateDateColumn({ name: "created_at" })
+    createdAt: Date;
+}

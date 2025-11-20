@@ -7,6 +7,7 @@ import {
   FileText,
   BarChart2,
   Settings,
+  Mic,
   User,
 } from 'lucide-react';
 
@@ -44,6 +45,11 @@ export const sidebarConfig: SidebarItem[] = [
     title: "Entrevistas",
     href: "/entrevistador/init",
     icon: Users,
+  },
+  {
+    title: "Entrevista por Voz",
+    href: "/entrevistador-tts/init",
+    icon: Mic,
   },
   {
     title: "Tipos de Entrevista",

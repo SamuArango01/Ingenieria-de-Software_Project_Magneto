@@ -8,6 +8,8 @@ import { Interview } from "@/modules/interviews/entities/Interview";
 import { InterviewEvaluation } from "@/modules/interview-evaluations/entities/InterviewEvaluation";
 import { InterviewQA } from "@/modules/interview-qa/entities/InterviewQA";
 import { UserRole } from "@/modules/roles/entities/UserRole";
+import { InterviewTTS } from "@/modules/interviews-tts/entities/InterviewTTS";
+import { InterviewTTSMessage } from "@/modules/interviews-tts/entities/InterviewTTSMessage";
 
 export const AppDataSource = new DataSource({
     type: "postgres",
@@ -26,7 +28,9 @@ export const AppDataSource = new DataSource({
         Interview,
         InterviewEvaluation,
         InterviewQA,
-        UserRole
+        UserRole,
+        InterviewTTS,
+        InterviewTTSMessage
     ],
     migrations: [],
     subscribers: [],

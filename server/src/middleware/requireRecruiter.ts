@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import { getAuth } from '@clerk/express';
 import { UserRoleService } from '@/modules/roles/services/UserRoleService';
 import { RoleType } from '@/modules/roles/entities/UserRole';
