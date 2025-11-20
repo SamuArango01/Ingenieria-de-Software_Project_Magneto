@@ -42,7 +42,7 @@ export const analyzeCandidateSpeech = async (
     );
 
     if (error) {
-      console.error("❌ Deepgram API error:", error);
+      console.error("Deepgram API error:", error);
       throw new Error(`Deepgram error: ${error.message}`);
     }
 
@@ -56,8 +56,7 @@ export const analyzeCandidateSpeech = async (
       
       if (words && words.length > 0) {
         const manualTranscript = words.map((word: any) => word.word).join(' ');
-        console.log("🛠️ Building manual transcript from words");
-        
+        console.log(" Building manual transcript from words");
         const candidateMetrics = analyzeCandidatePerformance(result);
         
         return {
@@ -87,7 +86,7 @@ export const analyzeCandidateSpeech = async (
   }
 };
 
-// ✅ ANÁLISIS SIMPLIFICADO Y EFECTIVO
+
 function analyzeCandidatePerformance(deepgramResult: any) {
   try {
     const channel = deepgramResult?.results?.channels?.[0];
@@ -100,26 +99,20 @@ function analyzeCandidatePerformance(deepgramResult: any) {
     const words = alternative.words || [];
     const duration = deepgramResult.metadata?.duration || 1;
     const totalWords = words.length;
-
-    // ✅ MÉTRICAS ESENCIALES DIRECTAS
     const wordsPerMinute = Math.round((totalWords / duration) * 60);
     
-    // Conteo directo de muletillas
+    
     const fillerWords = countFillerWords(words);
     const fillerRatio = totalWords > 0 ? fillerWords / totalWords : 0;
-    
-    // Análisis de confianza basado en palabras
     const confidenceScore = calculateSimpleConfidence(words);
-    
-    // Análisis de pausas simple
     const pauseAnalysis = analyzeSimplePauses(words);
     
-    // ✅ EVALUACIONES DIRECTAS
+ 
     const speakingPace = evaluateSimplePace(wordsPerMinute);
     const confidenceLevel = evaluateSimpleConfidence(confidenceScore);
     const fluencyLevel = evaluateSimpleFluency(fillerRatio, pauseAnalysis.frequency);
     
-    // ✅ ÁREAS CLAVE DE MEJORA (más específicas)
+    
     const improvementAreas = identifyKeyImprovements({
       wpm: wordsPerMinute,
       fillerRatio,
@@ -160,16 +153,16 @@ function analyzeCandidatePerformance(deepgramResult: any) {
       strengths
     };
 
-    console.log("✅ Simplified candidate metrics:", metrics);
+    console.log(" Candidate metrics:", metrics);
     return metrics;
 
   } catch (error) {
-    console.error("❌ Error in analyzeCandidatePerformance:", error);
+    console.error(" Error in analyzeCandidatePerformance:", error);
     return getDefaultCandidateMetrics();
   }
 }
 
-// ✅ MÉTRICAS POR DEFECTO SIMPLIFICADAS
+
 function getDefaultCandidateMetrics() {
   return {
     wordsPerMinute: 140,
@@ -189,7 +182,7 @@ function getDefaultCandidateMetrics() {
   };
 }
 
-// ✅ CONTEO DIRECTO DE MULETILLAS
+
 function countFillerWords(words: any[]): number {
   const spanishFillers = [
     'eh', 'ah', 'um', 'este', 'o sea', 'pues', 'bueno', 'entonces', 
@@ -201,7 +194,7 @@ function countFillerWords(words: any[]): number {
   ).length;
 }
 
-// ✅ CONFIANZA BASADA EN PALABRAS CLARAS
+
 function calculateSimpleConfidence(words: any[]): number {
   if (words.length === 0) return 0.7;
   
@@ -209,7 +202,7 @@ function calculateSimpleConfidence(words: any[]): number {
   return highConfidenceWords / words.length;
 }
 
-// ✅ ANÁLISIS SIMPLE DE PAUSAS
+
 function analyzeSimplePauses(words: any[]) {
   if (words.length < 2) {
     return { frequency: 0.1, averageDuration: 0.2 };
@@ -225,11 +218,11 @@ function analyzeSimplePauses(words: any[]) {
   
   return { 
     frequency: longPauses / words.length,
-    averageDuration: 0.3 // Valor por defecto simplificado
+    averageDuration: 0.3 
   };
 }
 
-// ✅ EVALUACIONES DIRECTAS Y CLARAS
+
 function evaluateSimplePace(wpm: number): string {
   if (wpm < 120) return "muy_lento";
   if (wpm < 140) return "lento";
@@ -254,7 +247,7 @@ function evaluateSimpleFluency(fillerRatio: number, pauseFrequency: number): str
   return "poco_fluido";
 }
 
-// ✅ IDENTIFICACIÓN DIRECTA DE PROBLEMAS Y FORTALEZAS
+
 function identifyKeyImprovements(metrics: any): string[] {
   const areas: string[] = [];
   

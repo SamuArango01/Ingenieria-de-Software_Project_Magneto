@@ -220,7 +220,7 @@ Keep it conversational, engaging, and appropriate for the difficulty level.`;
         interviewId: number,
         interviewHistory: Array<{ user: string; ai: string }>,
         candidateMetricsHistory: any[],
-        startTime: Date
+        interviewId?: number
     ): Promise<Result<{
         wouldPass: boolean;
         score: number;
@@ -252,35 +252,16 @@ Keep it conversational, engaging, and appropriate for the difficulty level.`;
                 vocalScore
             );
 
-            // Calcular duración en minutos
-            const endTime = new Date();
-            const durationMs = endTime.getTime() - startTime.getTime();
-            const durationMinutes = Math.round(durationMs / 60000);
-
-            // Actualizar interview con resultados finales
-            const interview = await this.interviewRepository.findById(interviewId);
-            if (interview) {
-                interview.score = overallScore;
-                interview.status = 'completed';
-                interview.completedAt = endTime;
-                interview.durationMinutes = durationMinutes;
-                await this.interviewRepository.save(interview);
-            }
-
-            // Extraer fortalezas y áreas de mejora del feedback
-            const strengthsMatch = feedback.match(/fortalezas?:?\s*([^\n]+)/i);
-            const weaknessesMatch = feedback.match(/áreas? de mejora:?\s*([^\n]+)/i);
-
-            // Guardar evaluación
-            const evaluationResult = await this.interviewEvaluationService.createEvaluation({
-                interviewId,
-                areasToImprove: weaknessesMatch ? weaknessesMatch[1].trim() : 'Areas to improve not specified',
-                strengths: strengthsMatch ? strengthsMatch[1].trim() : null,
-                aiFeedback: feedback
-            });
-
-            if (evaluationResult.isErr()) {
-                console.error('Error saving evaluation:', evaluationResult.error);
+            // Si aprueba y se proporcionó el interviewId, marcar como completada
+            if (wouldPass && interviewId) {
+                await this.interviewRepository.updateStatus(
+                    interviewId,
+                    'completed',
+                    overallScore
+                );
+                console.log(`✅ Entrevista #${interviewId} marcada como completada con score: ${overallScore}`);
+            } else if (interviewId) {
+                console.log(`⚠️ Entrevista #${interviewId} NO aprobada (score: ${overallScore}). No se marca como completada.`);
             }
 
             return ok({

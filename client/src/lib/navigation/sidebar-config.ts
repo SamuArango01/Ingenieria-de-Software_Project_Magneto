@@ -8,6 +8,7 @@ import {
   BarChart2,
   Settings,
   Mic,
+  User,
 } from 'lucide-react';
 
 export interface SidebarSubItem {
@@ -28,6 +29,17 @@ export const sidebarConfig: SidebarItem[] = [
     title: "Dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
+  },
+  {
+    title: "Candidato",
+    icon: User,
+    children: [
+      {
+        title: "Mi Perfil",
+        href: "/profile",
+        icon: User,
+      },
+    ],
   },
   {
     title: "Entrevistas",
@@ -52,6 +64,22 @@ export const sidebarConfig: SidebarItem[] = [
         title: "Crear Nuevo",
         href: "/interview-types/create",
         icon: PlusSquare,
+      },
+    ],
+  },
+  {
+    title: "Candidatos",
+    icon: Users,
+    children: [
+      {
+        title: "Vista General",
+        href: "/rrhh/general",
+        icon: List,
+      },
+      {
+        title: "Resumen",
+        href: "/rrhh/overview",
+        icon: BarChart2,
       },
     ],
   },

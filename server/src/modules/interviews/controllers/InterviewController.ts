@@ -255,15 +255,7 @@ export class InterviewController {
                 return;
             }
 
-            const { interviewId, interviewHistory, candidateMetricsHistory, startTime } = req.body;
-
-            if (!interviewId) {
-                res.status(400).json({
-                    success: false,
-                    message: 'Interview ID es requerido'
-                });
-                return;
-            }
+            const { interviewHistory, candidateMetricsHistory, interviewId } = req.body;
 
             if (!interviewHistory || !Array.isArray(interviewHistory)) {
                 res.status(400).json({
@@ -285,7 +277,7 @@ export class InterviewController {
                 Number(interviewId),
                 interviewHistory,
                 candidateMetricsHistory || [],
-                new Date(startTime)
+                interviewId ? Number(interviewId) : undefined
             );
 
             result.match(
